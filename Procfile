@@ -1,1 +1,1 @@
-web: gunicorn doctorhelp.wsgi --log-file 
+web: gunicorn doctorhelp.wsgi --log-file -
