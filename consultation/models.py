@@ -107,7 +107,7 @@ class DjangoAdminLog(models.Model):
     user = models.ForeignKey(AuthUser, models.DO_NOTHING)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'django_admin_log'
 
 
@@ -116,7 +116,7 @@ class DjangoContentType(models.Model):
     model = models.CharField(max_length=100)
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'django_content_type'
         unique_together = (('app_label', 'model'),)
 
@@ -127,7 +127,7 @@ class DjangoMigrations(models.Model):
     applied = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'django_migrations'
 
 
@@ -137,7 +137,7 @@ class DjangoSession(models.Model):
     expire_date = models.DateTimeField()
 
     class Meta:
-        managed = True
+        managed = False
         db_table = 'django_session'
 
 
