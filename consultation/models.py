@@ -152,12 +152,8 @@ class EmploiDuTemp(models.Model):
         db_table = 'emploi_du_temp'
 
 
-class Medecin(models.Model):
-    personne = models.ForeignKey('Personne', models.CASCADE)
+class Medecin(AuthUser):
     specialite = models.ForeignKey('Specialite', models.DO_NOTHING)
-    username = models.CharField(max_length=150)
-    email = models.CharField(max_length=150)
-    password = models.CharField(max_length=150)
     create_date_time = models.DateTimeField()
     mod_date_time = models.DateTimeField()
 
@@ -188,16 +184,6 @@ class Notification(models.Model):
         db_table = 'notification'
 
 
-class Patient(models.Model):
-    personne = models.ForeignKey('Personne', models.DO_NOTHING)
-    create_date_time = models.DateTimeField()
-    mod_date_time = models.DateTimeField()
-
-    class Meta:
-        managed = True
-        db_table = 'patient'
-
-
 class Personne(models.Model):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=150)
@@ -208,6 +194,14 @@ class Personne(models.Model):
     class Meta:
         managed = True
         db_table = 'personne'
+
+
+class Patient(Personne):
+
+
+    class Meta:
+        managed = True
+        db_table = 'patient'
 
 
 class Specialite(models.Model):
