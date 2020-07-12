@@ -81,10 +81,10 @@ WSGI_APPLICATION = 'doctorhelp.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'd59vl6lgqsfjf1',
-        'USER': 'ctbjgpcrmwbovj',
-        'PASSWORD': '7bea7ec4ac065ccc3148fa447a126a2f8d5d25fe04ab5176c1a78a431d3a166d',
-        'HOST': 'ec2-52-70-15-120.compute-1.amazonaws.com',
+        'NAME': 'dck4v4s0t4tb45',
+        'USER': 'kkkkeedmexyaga',
+        'PASSWORD': '8a533496c161a529ce3e26518b0c34f2235c0439225700f971a183b1711f9b8a',
+        'HOST': 'ec2-54-161-208-31.compute-1.amazonaws.com',
         'PORT': '5432',
     }
 }
