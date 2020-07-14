@@ -1,10 +1,13 @@
 from django.shortcuts import render
+from django.contrib.auth import authenticate
 
+from rest_framework.response import Response
+from rest_framework.views import APIView
+from rest_framework import generics, status
+from rest_framework import mixins
 
 from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
 from .serializers import *
-from rest_framework import mixins
-from rest_framework import generics
 
 # Create your views here.
 
@@ -104,3 +107,21 @@ class NotificationList(generics.ListCreateAPIView):
 class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+
+
+class UserCreate(generics.CreateAPIView):
+    authentication_classes = ()
+    permission_classes = ()
+    serializer_class = UserSerializer
+
+
+class LoginView(APIView):
+    permission_classes = ()
+    def post(self, request,):
+        username = request.data.get("username")
+        password = request.data.get("password")
+        user = authenticate(username=username, password=password)
+        if user:
+            return Response({"token": user.auth_token.key})
+        else:
+            return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
