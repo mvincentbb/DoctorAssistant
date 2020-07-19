@@ -83,19 +83,15 @@ WSGI_APPLICATION = 'doctorhelp.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dck4v4s0t4tb45',
-        'USER': 'kkkkeedmexyaga',
-        'PASSWORD': '8a533496c161a529ce3e26518b0c34f2235c0439225700f971a183b1711f9b8a',
-        'HOST': 'ec2-54-161-208-31.compute-1.amazonaws.com',
-        'PORT': '5432',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
 }
 
 
 
-# db_from_env = dj_database_url.config()
-# DATABASES['default'].update(db_from_env)
+db_from_env = dj_database_url.config()
+DATABASES['default'].update(db_from_env)
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
