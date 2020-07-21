@@ -51,7 +51,21 @@ class DemandeConsultationSerializer(serializers.ModelSerializer):
 class MedecinSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medecin
-        fields = '__all__'
+        fields = ('username', 'email', 'password')
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def create(self, validated_data):
+        user = Medecin(
+            email=validated_data['email'],
+            username=validated_data['username']
+        )
+
+        user.set_password(validated_data['password'])
+        user.save()
+        Token.objects.create(user=user)
+        return user
 
 
 class UserSerializer(serializers.ModelSerializer):

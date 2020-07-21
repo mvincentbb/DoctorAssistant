@@ -112,7 +112,7 @@ class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
 class UserCreate(generics.CreateAPIView):
     authentication_classes = ()
     permission_classes = ()
-    serializer_class = UserSerializer
+    serializer_class = MedecinSerializer
 
 
 class LoginView(APIView):
