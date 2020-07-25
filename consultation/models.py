@@ -2,6 +2,11 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+GENDER_CHOICES = [
+    ('M', 'Masculin'),
+    ('F', 'Feminin'),
+]
+
 class Consultation(models.Model):
     demande_consultation = models.ForeignKey('DemandeConsultation', models.DO_NOTHING)
     motif = models.CharField(max_length=150)
@@ -38,6 +43,14 @@ class EmploiDuTemp(models.Model):
 
 class Medecin(User):
     specialite = models.ForeignKey('Specialite', models.DO_NOTHING, null=True)
+    bio = models.TextField(null=True)
+    genre = models.CharField(
+        max_length=1,
+        choices=GENDER_CHOICES,
+        default='M',
+    )
+    adresse = models.CharField(max_length=200, null=True)
+    date_naissance = models.DateField(null=True)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
@@ -50,8 +63,8 @@ class MedecinStructureSanitaire(models.Model):
     medecin = models.ForeignKey(Medecin, models.DO_NOTHING)
     centre_medical = models.ForeignKey('StructureSanitaire', models.CASCADE)
     date_affiliation = models.DateTimeField()
-    create_date_time = models.DateTimeField()
-    mod_date_time = models.DateTimeField()
+    create_date_time = models.DateTimeField(auto_now_add=True)
+    mod_date_time = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = True
@@ -71,9 +84,14 @@ class Notification(models.Model):
 class Personne(models.Model):
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=150)
-    adresse = models.CharField(max_length=30)
-    create_date_time = models.DateTimeField()
-    mod_date_time = models.DateTimeField()
+    adresse = models.CharField(max_length=30, null=True)
+    telephone = models.CharField(max_length=30, null=True)
+    date_naissance = models.DateField()
+    genre = models.CharField(
+        max_length=1,
+        choices=GENDER_CHOICES,
+        default='M',
+    )
 
     class Meta:
         managed = True
@@ -81,7 +99,9 @@ class Personne(models.Model):
 
 
 class Patient(Personne):
-
+    created_by = models.ForeignKey('Medecin', models.DO_NOTHING, null=False)
+    create_date_time = models.DateTimeField(auto_now_add=True)
+    mod_date_time = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = True
@@ -89,9 +109,7 @@ class Patient(Personne):
 
 
 class Specialite(models.Model):
-    libelle = models.CharField(max_length=150)
-    create_date_time = models.DateTimeField()
-    mod_date_time = models.DateTimeField()
+    libelle = models.CharField(max_length=150, null=False)
 
     class Meta:
         managed = True
@@ -104,8 +122,8 @@ class StructureSanitaire(models.Model):
     telephone = models.CharField(max_length=150)
     adresse = models.CharField(max_length=100, blank=True, null=True)
     site_web = models.CharField(max_length=150)
-    create_date_time = models.DateTimeField()
-    mod_date_time = models.DateTimeField()
+    create_date_time = models.DateTimeField(auto_now_add=True)
+    mod_date_time = models.DateTimeField(auto_now=True)
 
     class Meta:
         managed = True

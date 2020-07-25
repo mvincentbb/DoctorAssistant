@@ -112,7 +112,7 @@ class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
 class UserCreate(generics.CreateAPIView):
     authentication_classes = ()
     permission_classes = ()
-    serializer_class = MedecinSerializer
+    serializer_class = AuthMedecinSerializer
 
 
 class LoginView(APIView):
@@ -122,6 +122,7 @@ class LoginView(APIView):
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
         if user:
-            return Response({"token": user.auth_token.key})
+            data = MedecinSerializer(user).data
+            return Response({"token": user.auth_token.key, "user_type": "medecin", 'user': data})
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)

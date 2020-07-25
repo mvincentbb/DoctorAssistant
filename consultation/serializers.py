@@ -48,10 +48,10 @@ class DemandeConsultationSerializer(serializers.ModelSerializer):
         model = DemandeConsultation
         fields = '__all__'
 
-class MedecinSerializer(serializers.ModelSerializer):
+class AuthMedecinSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medecin
-        fields = ('username', 'email', 'password')
+        fields = ('username', 'email', 'password', 'genre', 'specialite')
         extra_kwargs = {
             'password': {'write_only': True}
         }
@@ -59,13 +59,24 @@ class MedecinSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = Medecin(
             email=validated_data['email'],
-            username=validated_data['username']
+            username=validated_data['username'],
+            genre=validated_data['genre'],
+            specialite=validated_data['specialite']
         )
 
         user.set_password(validated_data['password'])
         user.save()
         Token.objects.create(user=user)
         return user
+
+
+class MedecinSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Medecin
+        fields = '__all__'
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
 
 
 class UserSerializer(serializers.ModelSerializer):
