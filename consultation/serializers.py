@@ -61,7 +61,7 @@ class AuthMedecinSerializer(serializers.ModelSerializer):
             email=validated_data['email'],
             username=validated_data['username'],
             genre=validated_data['genre'],
-            specialite=validated_data['specialite']
+            # specialite=validated_data['specialite']
         )
 
         user.set_password(validated_data['password'])
