@@ -54,8 +54,21 @@ class PatientList(generics.ListCreateAPIView):
 
 
 class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Patient.objects.all()
     serializer_class = PatientSerializer
+
+    def get_queryset(self):
+        token_key = self.request.headers.get("Authorization").split(" ")[1]
+        token = Token.objects.get(key=token_key)
+        
+        if not token:
+            if token.user.is_staff:
+                queryset = Patient.objects.all()
+            else:
+                queryset = []
+        else:
+            if Medecin.objects.get(id=token.user.id):
+                queryset = Patient.objects.filter(created_by=token.user)
+        return queryset
 
 
 class PersonneList(generics.ListCreateAPIView):
