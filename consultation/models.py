@@ -49,6 +49,7 @@ class Medecin(User):
         choices=GENDER_CHOICES,
         default='M',
     )
+    telephone = models.CharField(max_length=200, null=True)
     adresse = models.CharField(max_length=200, null=True)
     date_naissance = models.DateField(null=True)
     create_date_time = models.DateTimeField(auto_now_add=True)
