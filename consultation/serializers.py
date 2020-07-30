@@ -73,10 +73,10 @@ class AuthMedecinSerializer(serializers.ModelSerializer):
 class MedecinSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medecin
-        fields = '__all__'
-        extra_kwargs = {
-            'password': {'write_only': True}
-        }
+        exclude = ('password', )
+        # extra_kwargs = {
+        #     'password': {'write_only': True}
+        # }
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -36,8 +36,6 @@ urlpatterns = [
     path('emploiDuTemps/', views.EmploiDuTempList.as_view()),
     path('emploiDuTemps/<int:pk>/', views.EmploiDuTempDetail.as_view()),
 
-    #     path('snippets/', views.SnippetList.as_view()),
-    # path('snippets/<int:pk>/', views.SnippetDetail.as_view()),
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

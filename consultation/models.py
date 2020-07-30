@@ -54,6 +54,7 @@ class Medecin(User):
     date_naissance = models.DateField(null=True)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
+    structure_sanitaires = models.ManyToManyField('StructureSanitaire', through='MedecinStructureSanitaire', related_name='medecins')
 
     class Meta:
         managed = True
@@ -63,7 +64,9 @@ class Medecin(User):
 class MedecinStructureSanitaire(models.Model):
     medecin = models.ForeignKey(Medecin, models.DO_NOTHING)
     centre_medical = models.ForeignKey('StructureSanitaire', models.CASCADE)
-    date_affiliation = models.DateTimeField()
+    status_demande = models.BooleanField(default=False)
+    demandeur = models.CharField(max_length=1, choices=[('M', "Medecin"), ('S', "StructureSanitaire")])
+    date_affiliation = models.DateTimeField(),
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
@@ -111,6 +114,7 @@ class Patient(Personne):
 
 class Specialite(models.Model):
     libelle = models.CharField(max_length=150, null=False)
+    icon = models.CharField(max_length=500, null=False)
 
     class Meta:
         managed = True
