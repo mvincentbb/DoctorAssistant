@@ -108,6 +108,20 @@ class MedecinStructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = MedecinStructureSanitaire.objects.all()
     serializer_class = MedecinStructureSanitaireSerializer
 
+    def delete(self, request, *args, **kwargs):
+        medecin_pk = kwargs.get("medecin_pk")
+        structure_sanitaire_pk = kwargs.get("structure_sanitaire_pk")
+
+        if kwargs.get("pk"):
+            return super().delete(self, request, *args, **kwargs)
+        
+        elif structure_sanitaire_pk and medecin_pk:
+            MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk).delete()
+            
+            #map(lambda x: x.id, ss)
+            data = MedecinSerializer(Medecin.objects.get(id=medecin_pk)).data
+            return Response( data, status=status.HTTP_200_OK )
+
 class EmploiDuTempList(generics.ListCreateAPIView):
     queryset = EmploiDuTemp.objects.all()
     serializer_class = EmploiDuTempSerializer
@@ -136,7 +150,7 @@ class LoginView(APIView):
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
         if user:
-            data = MedecinSerializer(user).data
+            data = MedecinSerializer(Medecin.objects.get(id=user.id)).data
             return Response({"token": user.auth_token.key, "user_type": "medecin", 'user': data})
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
