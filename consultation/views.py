@@ -93,12 +93,56 @@ class SpecialiteDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = SpecialiteSerializer
 
 class StructureSanitaireList(generics.ListCreateAPIView):
-    queryset = StructureSanitaire.objects.all()
     serializer_class = StructureSanitaireSerializer
 
+    def get_queryset(self):
+        print(self.request.path)
+        if self.request.path == "/structureSanitaires/":
+            return StructureSanitaire.objects.all()
+
+        AUTHORIZATION = self.request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            if self.request.user.is_authenticated and self.request.user.is_staff:
+                queryset = StructureSanitaire.objects.all()
+            else:
+                queryset = []
+        else:
+            token_key = AUTHORIZATION.split(" ")[1]
+            token = Token.objects.get(key=token_key)
+            medecin = Medecin.objects.get(id=token.user.id)
+            if medecin:
+                queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                # queryset = StructureSanitaire.objects.filter(created_by=token.user)
+            else:
+                queryset = []
+        
+        return queryset
+
 class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = StructureSanitaire.objects.all()
     serializer_class = StructureSanitaireSerializer
+
+    def get_queryset(self):
+        print(self.request.path)
+        if self.request.path == "/structureSanitaires/":
+            return StructureSanitaire.objects.all()
+
+        AUTHORIZATION = self.request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            if self.request.user.is_authenticated and self.request.user.is_staff:
+                queryset = StructureSanitaire.objects.all()
+            else:
+                queryset = []
+        else:
+            token_key = AUTHORIZATION.split(" ")[1]
+            token = Token.objects.get(key=token_key)
+            medecin = Medecin.objects.get(id=token.user.id)
+            if medecin:
+                queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                # queryset = StructureSanitaire.objects.filter(created_by=token.user)
+            else:
+                queryset = []
+        
+        return queryset
 
 class MedecinStructureSanitaireList(generics.ListCreateAPIView):
     queryset = MedecinStructureSanitaire.objects.all()

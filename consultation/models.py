@@ -62,8 +62,8 @@ class Medecin(User):
 
 
 class MedecinStructureSanitaire(models.Model):
-    medecin = models.ForeignKey(Medecin, models.DO_NOTHING)
-    centre_medical = models.ForeignKey('StructureSanitaire', models.CASCADE)
+    medecin = models.ForeignKey(Medecin, models.DO_NOTHING, related_name='medecin_structure_sanitaires')
+    centre_medical = models.ForeignKey('StructureSanitaire', models.CASCADE, related_name='medecin_structure_sanitaires')
     status_demande = models.BooleanField(default=False)
     demandeur = models.CharField(max_length=1, choices=[('M', "Medecin"), ('S', "StructureSanitaire")])
     date_affiliation = models.DateTimeField(),
@@ -103,7 +103,7 @@ class Personne(models.Model):
 
 
 class Patient(Personne):
-    created_by = models.ForeignKey('Medecin', models.DO_NOTHING, null=False)
+    created_by = models.ForeignKey(User, models.DO_NOTHING, null=False)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
@@ -121,12 +121,12 @@ class Specialite(models.Model):
         db_table = 'specialite'
 
 
-class StructureSanitaire(models.Model):
+class StructureSanitaire(User):
     denomination = models.CharField(max_length=150)
-    email = models.CharField(max_length=150)
+    # email = models.CharField(max_length=150)
     telephone = models.CharField(max_length=150)
     adresse = models.CharField(max_length=100, blank=True, null=True)
-    site_web = models.CharField(max_length=150)
+    description = models.TextField(null=True)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
