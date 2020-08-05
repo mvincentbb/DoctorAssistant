@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate
+from django.urls import reverse
 
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
@@ -189,7 +190,18 @@ class UserCreate(generics.CreateAPIView):
 
 class LoginView(APIView):
     permission_classes = ()
-    def post(self, request,):
+    def post(self, request):
+        if request.path == reverse('assertuser'):
+            token_key = request.data.get("token")
+            token = Token.objects.get(key=token_key)
+            if token and token.user:
+                medecin = Medecin.objects.get(id=token.user.id)
+                data = MedecinSerializer(medecin).data
+                ss = list(map(lambda x: x.centre_medical.id, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                data["structure_sanitaires"] = ss
+                print(data)
+                return Response({'user': data})
+        
         username = request.data.get("username")
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
