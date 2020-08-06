@@ -123,13 +123,15 @@ class Specialite(models.Model):
 
 class StructureSanitaire(User):
     denomination = models.CharField(max_length=150)
-    # email = models.CharField(max_length=150)
+    owner = models.ForeignKey(User, models.DO_NOTHING, related_name='+', null=True)
     telephone = models.CharField(max_length=150)
     adresse = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(null=True)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
+
     class Meta:
         managed = True
         db_table = 'structure_sanitaire'
+        ordering = ['denomination']
