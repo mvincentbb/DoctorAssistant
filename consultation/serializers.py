@@ -47,6 +47,9 @@ class DemandeConsultationSerializer(serializers.ModelSerializer):
     class Meta:
         model = DemandeConsultation
         fields = '__all__'
+        extra_kwargs = {
+            'date_consultation': {'required': False}
+        }
 
 class AuthMedecinSerializer(serializers.ModelSerializer):
     class Meta:
@@ -74,10 +77,6 @@ class MedecinSerializer(serializers.ModelSerializer):
     class Meta:
         model = Medecin
         exclude = ('password', )
-        # extra_kwargs = {
-        #     'password': {'write_only': True}
-        # }
-
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:

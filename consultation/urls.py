@@ -15,6 +15,7 @@ urlpatterns = [
 
     path('demandeConsultations/', views.DemandeConsultationList.as_view()),
     path('demandeConsultations/<int:pk>/', views.DemandeConsultationDetail.as_view()),
+    path('demandeConsultationsWithNames/', views.allDemandeConsultation),
 
     path('patients/', views.PatientList.as_view()),
     path('patients/<int:pk>/', views.PatientDetail.as_view()),

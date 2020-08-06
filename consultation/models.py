@@ -73,6 +73,8 @@ class MedecinStructureSanitaire(models.Model):
     class Meta:
         managed = True
         db_table = 'medecin_structure_sanitaire'
+    
+
 
 
 class Notification(models.Model):

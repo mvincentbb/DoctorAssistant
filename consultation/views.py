@@ -3,11 +3,14 @@ from django.contrib.auth import authenticate
 from django.db import transaction
 from django.urls import reverse
 
+from rest_framework.decorators import action
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics, status
 from rest_framework import mixins
+from rest_framework.decorators import api_view
+import json
 
 from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
 from .serializers import *
@@ -39,8 +42,21 @@ class ConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = ConsultationSerializer
 
 class DemandeConsultationList(generics.ListCreateAPIView):
-    queryset = DemandeConsultation.objects.all()
     serializer_class = DemandeConsultationSerializer
+    queryset = DemandeConsultation.objects.all()
+
+
+
+    def create(self, request, *args, **kwargs):
+        medecin_pk = request.data.get("medecin")
+        structure_sanitaire_pk = request.data.get('medecin_centre_medical')
+        
+        if structure_sanitaire_pk and medecin_pk:
+            mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
+            patient = Patient.objects.get(pk = request.data.get("patient"))
+            dc = DemandeConsultation.objects.create( medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
+            return Response(data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.pk)).data,status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DemandeConsultation.objects.all()
@@ -292,8 +308,23 @@ class LoginView(APIView):
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 def getDoctorHospitals(doctor):
     hospitals = list(map(lambda x: x.centre_medical, doctor.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=doctor.id, status_demande=True)))
     data = StructureSanitaireSerializer(hospitals, many=True).data
     return Response( data, status=status.HTTP_200_OK )
+
+def getDemandeConsultationWithName():
+        demandes = []
+        for obj in DemandeConsultation.objects.all():
+            medecin = obj.medecin_centre_medical.medecin
+            centre = obj.medecin_centre_medical.centre_medical
+            patient = obj.patient
+            dc = {"id":obj.pk,"medecin":medecin.first_name+" "+medecin.last_name,"centre_medical":centre.denomination, "date_consultation":obj.date_consultation.__str__(),"status":obj.status, "patient":patient.nom+" "+patient.prenom}
+            demandes.append(dc)
+        print(demandes)
+        return demandes
+
+@api_view(['GET'])
+def allDemandeConsultation(request):
+    if request.method == 'GET':
+        return Response(data = getDemandeConsultationWithName())
