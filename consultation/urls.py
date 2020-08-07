@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path("login/", views.LoginView.as_view(), name="login"),
+    path("assert_user_by_token/", views.LoginView.as_view(), name="assertuser"),
     path("register/", views.UserCreate.as_view(), name="user_create"),
     
     path('notifications/', views.NotificationList.as_view()),
@@ -24,12 +25,14 @@ urlpatterns = [
 
     path('medecins/', views.MedecinList.as_view()),
     path('medecins/<int:pk>/', views.MedecinDetail.as_view()),
+    path('medecins/add_structure_sanitaire/', views.MedecinView.as_view(), name="medecin_add_structure_sanitaire"),
 
     path('specialites/', views.SpecialiteList.as_view()),
     path('specialites/<int:pk>/', views.SpecialiteDetail.as_view()),
 
     path('structureSanitaires/', views.StructureSanitaireList.as_view()),
-    path('structureSanitaires/my/', views.StructureSanitaireList.as_view()),
+    path('structureSanitaires/my/', views.StructureSanitaireList.as_view(), name="structure_sanitaire_mine"),
+    path('structureSanitaires/added/', views.StructureSanitaireList.as_view(), name="structure_sanitaire_added"),
     path('structureSanitaires/<int:pk>/', views.StructureSanitaireDetail.as_view()),
 
     path('medecinStructureSanitaires/', views.MedecinStructureSanitaireList.as_view()),

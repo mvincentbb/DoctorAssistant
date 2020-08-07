@@ -26,7 +26,7 @@ class SpecialiteSerializer(serializers.ModelSerializer):
 class StructureSanitaireSerializer(serializers.ModelSerializer):
     class Meta:
         model = StructureSanitaire
-        fields = '__all__'
+        fields = ('denomination', 'telephone', 'adresse', 'description', 'username', 'email', 'id', 'owner')
 
 class MedecinStructureSanitaireSerializer(serializers.ModelSerializer):
     class Meta:
