@@ -9,10 +9,10 @@ GENDER_CHOICES = [
 
 class Consultation(models.Model):
     demande_consultation = models.ForeignKey('DemandeConsultation', models.DO_NOTHING)
-    motif = models.CharField(max_length=150)
-    interrogatoire = models.CharField(max_length=150)
-    resume = models.CharField(max_length=150)
-    hypothese_diagnostique = models.CharField(max_length=150)
+    motif = models.TextField()
+    interrogatoire = models.TextField()
+    resume = models.TextField()
+    hypothese_diagnostique = models.TextField()
 
     class Meta:
         managed = True

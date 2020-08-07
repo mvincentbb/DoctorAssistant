@@ -18,9 +18,9 @@ class ConsultationList(generics.ListCreateAPIView):
     serializer_class = ConsultationSerializer
 
     def create(self, request, *args, **kwargs):
-        medecin_pk = request.GET.get("medecin_pk",default=None)
-        structure_sanitaire_pk = request.GET.get('structure_sanitaire_pk',default=None)
-        # print(medecin_pk + "----"+ structure_sanitaire_pk)
+        medecin_pk = request.data.get("medecin_pk")
+        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
+        
         if structure_sanitaire_pk and medecin_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
             patient = Patient.objects.get(pk = request.data.get("patient"))
