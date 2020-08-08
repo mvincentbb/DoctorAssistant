@@ -9,6 +9,7 @@ GENDER_CHOICES = [
 
 class Consultation(models.Model):
     demande_consultation = models.ForeignKey('DemandeConsultation', models.DO_NOTHING)
+    # structure_sanitaire = models.ForeignKey('StructureSanitaire', models.CASCADE)
     motif = models.CharField(max_length=150)
     interrogatoire = models.CharField(max_length=150)
     resume = models.CharField(max_length=150)
@@ -105,7 +106,12 @@ class Personne(models.Model):
 
 
 class Patient(Personne):
-    created_by = models.ForeignKey(User, models.DO_NOTHING, null=False)
+    doctor = models.ForeignKey(User, models.DO_NOTHING, null=False)
+    groupage = models.CharField(max_length=5, null=True)
+    allergies = models.CharField(max_length=1000, null=True)
+    maladies = models.CharField(max_length=2000, null=True)
+    habitude_alimentaires = models.CharField(max_length=2000, null=True)
+    is_deleted = models.BooleanField(default=False)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
@@ -129,6 +135,7 @@ class StructureSanitaire(User):
     telephone = models.CharField(max_length=150)
     adresse = models.CharField(max_length=100, blank=True, null=True)
     description = models.TextField(null=True)
+    is_deleted = models.BooleanField(default=False)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
 
@@ -137,3 +144,13 @@ class StructureSanitaire(User):
         managed = True
         db_table = 'structure_sanitaire'
         ordering = ['denomination']
+
+class Constantes(models.Model):
+    temprature = models.DecimalField(max_digits=4, decimal_places=2)
+    pression_arterielle = models.DecimalField(max_digits=5, decimal_places=2)
+    poids = models.DecimalField(max_digits=5, decimal_places=2)
+    taille = models.DecimalField(max_digits=4, decimal_places=1)
+
+    class Meta:
+        managed = True
+        db_table = 'constantes'

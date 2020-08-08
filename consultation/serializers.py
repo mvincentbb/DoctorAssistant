@@ -1,11 +1,16 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
+from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification, Constantes
 
 class PersonneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Personne
+        fields = '__all__'
+
+class ConstantesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Constantes
         fields = '__all__'
 
 class ConsultationSerializer(serializers.ModelSerializer):

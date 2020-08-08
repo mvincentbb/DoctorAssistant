@@ -16,6 +16,7 @@ from .models import Consultation, DemandeConsultation , Patient, Personne, Medec
 from .serializers import *
 
 from datetime import *
+from time import sleep
 
 
 class ConsultationList(generics.ListCreateAPIView):
@@ -23,8 +24,8 @@ class ConsultationList(generics.ListCreateAPIView):
     serializer_class = ConsultationSerializer
 
     def create(self, request, *args, **kwargs):
-        medecin_pk = request.GET.get("medecin_pk",default=None)
-        structure_sanitaire_pk = request.GET.get('structure_sanitaire_pk',default=None)
+        medecin_pk = request.data.get("medecin_pk",default=None)
+        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk',default=None)
         # print(medecin_pk + "----"+ structure_sanitaire_pk)
         if structure_sanitaire_pk and medecin_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
@@ -66,6 +67,8 @@ class PatientList(generics.ListCreateAPIView):
     serializer_class = PatientSerializer
 
     def get_queryset(self):
+        # print("sleep....")
+        # sleep(10)
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
             if self.request.user.is_authenticated and self.request.user.is_staff:
@@ -76,7 +79,7 @@ class PatientList(generics.ListCreateAPIView):
             token_key = AUTHORIZATION.split(" ")[1]
             token = Token.objects.get(key=token_key)
             if Medecin.objects.get(id=token.user.id):
-                queryset = Patient.objects.filter(created_by=token.user)
+                queryset = Patient.objects.filter(doctor=token.user, is_deleted=False)
             else:
                 queryset = []
         
@@ -86,7 +89,6 @@ class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = PatientSerializer
 
     def get_queryset(self):
-        # print(self.request.headers)
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
             if self.request.user.is_authenticated and self.request.user.is_staff:
@@ -97,11 +99,24 @@ class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
             token_key = AUTHORIZATION.split(" ")[1]
             token = Token.objects.get(key=token_key)
             if Medecin.objects.get(id=token.user.id):
-                queryset = Patient.objects.filter(created_by=token.user)
+                queryset = Patient.objects.filter(doctor=token.user, is_deleted=False)
             else:
                 queryset = []
         
         return queryset
+
+    def delete(self, request, *args, **kwargs):
+        patient_pk = kwargs.get("pk")
+        if patient_pk:
+            try:
+                patient = Patient.objects.get(id=patient_pk)
+            except Exception as e:
+                patient = None
+
+            if patient:
+                patient.is_deleted = True
+                patient.save()
+                return Response( {}, status=status.HTTP_204_NO_CONTENT )
 
 class PersonneList(generics.ListCreateAPIView):
     queryset = Personne.objects.all()
@@ -149,14 +164,8 @@ class MedecinView(APIView):
                     mss.status_demande = 1
                     mss.save()
 
-                    data = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
-                    print(data)
-                    data = StructureSanitaireSerializer(data, many=True).data
+                    data = getDoctorHospitals(medecin)
                     return Response(data, status=status.HTTP_201_CREATED)
-
-            
-
-
 
 class SpecialiteList(generics.ListCreateAPIView):
     queryset = Specialite.objects.all()
@@ -189,6 +198,8 @@ class StructureSanitaireList(generics.ListCreateAPIView):
                     queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=False)))
                 elif self.request.path == reverse('structure_sanitaire_mine'):
                     queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                queryset = list(filter(lambda ss: not ss.is_deleted, queryset))
+                print(queryset)
             else:
                 queryset = []
         
@@ -198,10 +209,6 @@ class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = StructureSanitaireSerializer
 
     def get_queryset(self):
-        print(self.request.path)
-        if self.request.path == "/structureSanitaires/":
-            return StructureSanitaire.objects.all()
-
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
             if self.request.user.is_authenticated and self.request.user.is_staff:
@@ -214,15 +221,54 @@ class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
             medecin = Medecin.objects.get(id=token.user.id)
             if medecin:
                 queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
-                # queryset = StructureSanitaire.objects.filter(created_by=token.user)
+                queryset = list(filter(lambda ss: not ss.is_deleted, queryset))
+                print(queryset)
             else:
                 queryset = []
         
         return queryset
 
+    def get(self, request, *args, **kwargs):
+        structure_sanitaire = None
+        queryset = self.get_queryset()
+        for s in queryset:
+            if s.id == kwargs["pk"]:
+                structure_sanitaire = s
+                break
+        if structure_sanitaire:
+            data = StructureSanitaireSerializer(structure_sanitaire).data
+            return Response( data, status=status.HTTP_200_OK )
+        return Response( {"error": "Not Found"}, status=status.HTTP_404_NOT_FOUND )
+
+    def update(self, request, *args, **kwargs):
+        structure_sanitaire = None
+        queryset = self.get_queryset()
+        
+        for s in queryset:
+            if s.id == kwargs["pk"]:
+                structure_sanitaire = s
+                break
+        if structure_sanitaire:
+            structure_sanitaire = StructureSanitaire.objects.filter(pk=kwargs["pk"])
+            denomination = request.data["denomination"]
+            adresse = request.data["adresse"]
+            description = request.data["description"]
+            email = request.data["email"]
+            telephone = request.data["telephone"]
+            structure_sanitaire.update(
+                denomination=denomination, 
+                adresse=adresse, 
+                description=description, 
+                email=email, 
+                telephone=telephone
+            )
+
+            # data = StructureSanitaireSerializer(structure_sanitaire).data
+            return Response( {}, status=status.HTTP_200_OK )
+        return Response( {"error": "Not Found"}, status=status.HTTP_404_NOT_FOUND )
+
     def delete(self, request, *args, **kwargs):
-        if request.query_params.get('return') == 'my_hos':
-            
+        if kwargs.get("pk"): 
             try:
                 hospital = StructureSanitaire.objects.get(id=kwargs.get("pk"))
                 medecin = Medecin.objects.get(id=hospital.owner.id)
@@ -230,12 +276,13 @@ class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
                 hospital = None
             
             if hospital:
-                print("delete")
-                hospital.delete()
-            return getDoctorHospitals(medecin)
+                print("deleted")
+                hospital.is_deleted = True
+                hospital.save()
 
-        if kwargs.get("pk"):
-            return super().delete(self, request, *args, **kwargs)
+            if request.query_params.get('return') == 'my_hos':
+                return Response( getDoctorHospitals(medecin), status=status.HTTP_200_OK )
+            return Response( {}, status=status.HTTP_204_NO_CONTENT )
 
 class MedecinStructureSanitaireList(generics.ListCreateAPIView):
     queryset = MedecinStructureSanitaire.objects.all()
@@ -258,7 +305,7 @@ class MedecinStructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
             mss.delete()
             
             if request.DELETE.get('return') == 'my_hos':
-                return getDoctorHospitals(medecin)
+                return Response( getDoctorHospitals(medecin), status=status.HTTP_200_OK )
 
             data = MedecinSerializer(Medecin.objects.get(id=medecin_pk)).data
             return Response( data, status=status.HTTP_200_OK )
@@ -307,11 +354,50 @@ class LoginView(APIView):
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
 
+class ScheduleView(APIView):
+    def get(self, request):
+        AUTHORIZATION = request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            return Response({"error": "UNAUTHORIZED"}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            token_key = AUTHORIZATION.split(" ")[1]
+            try:
+                token = Token.objects.get(key=token_key)
+                medecin = Medecin.objects.get(id=token.user.id)
+            except Exception as e:
+                token = None
+            
+            if not token:
+                return Response({"error": "UNAUTHORIZED"}, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                consultations = Consultation.objects.filter(
+                    demande_consultation__medecin_centre_medical__medecin=medecin
+                )
+                demande_consultations = DemandeConsultation.objects.filter(
+                    medecin_centre_medical__medecin=medecin
+                )
+
+                consultations = ConsultationSerializer(consultations, many=True).data
+                demande_consultations = DemandeConsultationSerializer(demande_consultations, many=True).data
+                structure_sanitaires = getDoctorHospitals(medecin)
+                
+                for demande_consultation in demande_consultations:
+                    hopital = MedecinStructureSanitaire.objects.get(id=demande_consultation['medecin_centre_medical']).centre_medical
+                    hopital = StructureSanitaireSerializer(hopital).data
+
+                    patient = Patient.objects.get(id=demande_consultation['patient'])
+                    patient = PatientSerializer(patient).data
+                    
+                    demande_consultation['hopital'] = hopital
+                    demande_consultation['patient'] = patient
+
+                return Response({'consultations': consultations, 'demande_consultations': demande_consultations, 'structure_sanitaires': structure_sanitaires}, status=status.HTTP_200_OK)
 
 def getDoctorHospitals(doctor):
     hospitals = list(map(lambda x: x.centre_medical, doctor.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=doctor.id, status_demande=True)))
+    hospitals = list(filter(lambda ss: not ss.is_deleted, hospitals))
     data = StructureSanitaireSerializer(hospitals, many=True).data
-    return Response( data, status=status.HTTP_200_OK )
+    return data
 
 def getDemandeConsultationWithName():
         demandes = []
