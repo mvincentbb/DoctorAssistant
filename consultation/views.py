@@ -27,13 +27,17 @@ class ConsultationList(generics.ListCreateAPIView):
         medecin_pk = request.data.get("medecin_pk",default=None)
         structure_sanitaire_pk = request.data.get('structure_sanitaire_pk',default=None)
         # print(medecin_pk + "----"+ structure_sanitaire_pk)
+
+        medecin_pk = request.data.get("medecin_pk")
+        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
+        
         if structure_sanitaire_pk and medecin_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
             patient = Patient.objects.get(pk = request.data.get("patient"))
             dc = DemandeConsultation.objects.create( medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
             Consultation.objects.create(demande_consultation=dc, motif=request.data.get("motif"),resume=request.data.get("resume"), interrogatoire= request.data.get("interrogatoire"),hypothese_diagnostique=request.data.get("hypothese_diagnostique"))
 
-            return Response(status=status.HTTP_201_CREATED)
+            return Response(status=status.HTTP_200_OK)
         dc = DemandeConsultation.objects.get(pk=request.data.get("demande_consultation"))
         Consultation.objects.create(demande_consultation=dc, motif=request.data.get("motif"),resume=request.data.get("resume"), interrogatoire= request.data.get("interrogatoire"),hypothese_diagnostique=request.data.get("hypothese_diagnostique"))
         return Response(status=status.HTTP_201_CREATED)
