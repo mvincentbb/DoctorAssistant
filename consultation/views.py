@@ -24,8 +24,8 @@ class ConsultationList(generics.ListCreateAPIView):
     serializer_class = ConsultationSerializer
 
     def create(self, request, *args, **kwargs):
-        medecin_pk = request.data.get("medecin_pk",default=None)
-        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk',default=None)
+        medecin_pk = request.data.get("medecin_pk")
+        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
         # print(medecin_pk + "----"+ structure_sanitaire_pk)
 
         medecin_pk = request.data.get("medecin_pk")
@@ -50,8 +50,6 @@ class DemandeConsultationList(generics.ListCreateAPIView):
     serializer_class = DemandeConsultationSerializer
     queryset = DemandeConsultation.objects.all()
 
-
-
     def create(self, request, *args, **kwargs):
         medecin_pk = request.data.get("medecin")
         structure_sanitaire_pk = request.data.get('medecin_centre_medical')
@@ -66,6 +64,18 @@ class DemandeConsultationList(generics.ListCreateAPIView):
 class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DemandeConsultation.objects.all()
     serializer_class = DemandeConsultationSerializer
+    def update(self, request, *args, **kwargs):
+        print("===========")
+        medecin_pk = request.data.get("medecin")
+        structure_sanitaire_pk = request.data.get('centre_medical')
+        
+        if structure_sanitaire_pk and medecin_pk:
+            mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
+            patient = Patient.objects.get(pk = request.data.get("patient"))
+            dc = DemandeConsultation.objects.update( medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
+            return Response(data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc)).data,status=status.HTTP_200_OK)
+        
+        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class PatientList(generics.ListCreateAPIView):
     serializer_class = PatientSerializer
@@ -411,10 +421,15 @@ def getDemandeConsultationWithName():
             patient = obj.patient
             dc = {"id":obj.pk,"medecin":medecin.first_name+" "+medecin.last_name,"centre_medical":centre.denomination, "date_consultation":obj.date_consultation.__str__(),"status":obj.status, "patient":patient.nom+" "+patient.prenom}
             demandes.append(dc)
-        print(demandes)
         return demandes
 
 @api_view(['GET'])
 def allDemandeConsultation(request):
     if request.method == 'GET':
         return Response(data = getDemandeConsultationWithName())
+
+@api_view(['POST'])
+def countPatients(request, *args, **kwargs):
+    if request.method == 'POST':
+        patientsNumber = Patient.objects.filter(doctor=request.data.get("doctorpatients"), is_deleted=False).count()
+        return Response(data = patientsNumber)
