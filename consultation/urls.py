@@ -30,7 +30,7 @@ urlpatterns = [
     path('specialites/', views.SpecialiteList.as_view()),
     path('specialites/<int:pk>/', views.SpecialiteDetail.as_view()),
 
-    path('structureSanitaires/', views.StructureSanitaireList.as_view()),
+    path('structureSanitaires/', views.StructureSanitaireList.as_view(), name="structure_sanitaires"),
     path('structureSanitaires/my/', views.StructureSanitaireList.as_view(), name="structure_sanitaire_mine"),
     path('structureSanitaires/added/', views.StructureSanitaireList.as_view(), name="structure_sanitaire_added"),
     path('structureSanitaires/<int:pk>/', views.StructureSanitaireDetail.as_view()),

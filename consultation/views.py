@@ -183,9 +183,9 @@ class StructureSanitaireList(generics.ListCreateAPIView):
     serializer_class = StructureSanitaireSerializer
 
     def get_queryset(self):
-        print(self.request.path)
-        if self.request.path == "/structureSanitaires/":
-            return StructureSanitaire.objects.all()
+        # print(self.request.path)
+        # if self.request.path == "/structureSanitaires/":
+        #     return StructureSanitaire.objects.all()
 
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
@@ -200,8 +200,13 @@ class StructureSanitaireList(generics.ListCreateAPIView):
             if medecin:
                 if self.request.path == reverse('structure_sanitaire_added'):
                     queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=False)))
+                
                 elif self.request.path == reverse('structure_sanitaire_mine'):
                     queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                
+                elif self.request.path == reverse("structure_sanitaires"):
+                    queryset = StructureSanitaire.objects.filter(is_deleted=False, owner__isnull=True)
+                
                 queryset = list(filter(lambda ss: not ss.is_deleted, queryset))
                 print(queryset)
             else:
@@ -344,9 +349,11 @@ class LoginView(APIView):
             if token and token.user:
                 medecin = Medecin.objects.get(id=token.user.id)
                 data = MedecinSerializer(medecin).data
-                ss = list(map(lambda x: x.centre_medical.id, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                ss = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                ss = filter(lambda s: not s.is_deleted, ss)
+                ss = map(lambda i: i.id, ss)
                 data["structure_sanitaires"] = ss
-                # print(data["structure_sanitaires"])
+                print(data["structure_sanitaires"])
                 return Response({'user': data})
         
         username = request.data.get("username")
