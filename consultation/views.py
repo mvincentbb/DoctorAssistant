@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate
 from django.db import transaction
+from django.db.models import Q
 from django.urls import reverse
 
 from rest_framework.decorators import action
@@ -178,8 +179,10 @@ class MedecinView(APIView):
                     mss.status_demande = 1
                     mss.save()
 
-                    data = getDoctorHospitals(medecin)
-                    return Response(data, status=status.HTTP_201_CREATED)
+                    # owned = getDoctorHospitals(medecin)
+                    data = StructureSanitaire.objects.filter( Q(is_deleted=False) & (Q(owner__isnull=True) | Q(owner__id=medecin.id)) )
+                    data = StructureSanitaireSerializer(data, many=True).data
+                    return Response({'structure_sanitaires': data, 'id': ss.id}, status=status.HTTP_201_CREATED)
 
 class SpecialiteList(generics.ListCreateAPIView):
     queryset = Specialite.objects.all()
@@ -215,7 +218,7 @@ class StructureSanitaireList(generics.ListCreateAPIView):
                     queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
                 
                 elif self.request.path == reverse("structure_sanitaires"):
-                    queryset = StructureSanitaire.objects.filter(is_deleted=False, owner__isnull=True)
+                    queryset = StructureSanitaire.objects.filter( Q(is_deleted=False) & (Q(owner__isnull=True) | Q(owner__id=medecin.id)) )
                 
                 queryset = list(filter(lambda ss: not ss.is_deleted, queryset))
                 print(queryset)
@@ -323,7 +326,7 @@ class MedecinStructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
             medecin = mss.medecin
             mss.delete()
             
-            if request.DELETE.get('return') == 'my_hos':
+            if request.query_params.get('return') == 'my_hos':
                 return Response( getDoctorHospitals(medecin), status=status.HTTP_200_OK )
 
             data = MedecinSerializer(Medecin.objects.get(id=medecin_pk)).data
@@ -359,7 +362,11 @@ class LoginView(APIView):
             if token and token.user:
                 medecin = Medecin.objects.get(id=token.user.id)
                 data = MedecinSerializer(medecin).data
+
+                print("@@@@@@@@@@@@@@@@@")
+                print(medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True))
                 ss = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
+                
                 ss = filter(lambda s: not s.is_deleted, ss)
                 ss = map(lambda i: i.id, ss)
                 data["structure_sanitaires"] = ss
