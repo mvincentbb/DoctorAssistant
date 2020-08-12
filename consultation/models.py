@@ -106,8 +106,8 @@ class Personne(models.Model):
 
 class Patient(Personne):
     doctor = models.ForeignKey(User, models.DO_NOTHING, null=False)
-    groupage = models.CharField(max_length=5, null=True)
-    allergies = models.CharField(max_length=1000, null=True)
+    groupage = models.CharField(max_length=3, null=True)
+    allergies = models.CharField(max_length=2000, null=True)
     maladies = models.CharField(max_length=2000, null=True)
     habitude_alimentaires = models.CharField(max_length=2000, null=True)
     is_deleted = models.BooleanField(default=False)
