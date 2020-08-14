@@ -82,8 +82,7 @@ class PatientList(generics.ListCreateAPIView):
     serializer_class = PatientSerializer
 
     def get_queryset(self):
-        # print("sleep....")
-        # sleep(10)
+        print(self.request.data)
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
             if self.request.user.is_authenticated and self.request.user.is_staff:

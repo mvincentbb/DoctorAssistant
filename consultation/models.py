@@ -110,6 +110,7 @@ class Patient(Personne):
     allergies = models.CharField(max_length=2000, null=True)
     maladies = models.CharField(max_length=2000, null=True)
     habitude_alimentaires = models.CharField(max_length=2000, null=True)
+    photo = models.ImageField(upload_to="avatars/", null=True)
     is_deleted = models.BooleanField(default=False)
     create_date_time = models.DateTimeField(auto_now_add=True)
     mod_date_time = models.DateTimeField(auto_now=True)
