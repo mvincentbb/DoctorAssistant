@@ -15,6 +15,7 @@ import json
 
 from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
 from .serializers import *
+from .utils import getDoctorHospitals, getToken
 
 from datetime import *
 from time import sleep
@@ -66,7 +67,7 @@ class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DemandeConsultation.objects.all()
     serializer_class = DemandeConsultationSerializer
     def update(self, request, *args, **kwargs):
-        print("===========")
+        # print("===========")
         medecin_pk = request.data.get("medecin")
         structure_sanitaire_pk = request.data.get('centre_medical')
         
@@ -82,7 +83,7 @@ class PatientList(generics.ListCreateAPIView):
     serializer_class = PatientSerializer
 
     def get_queryset(self):
-        print(self.request.data)
+        # print(self.request.data)
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
             if self.request.user.is_authenticated and self.request.user.is_staff:
@@ -118,6 +119,13 @@ class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
                 queryset = []
         
         return queryset
+
+
+    def get(self, request, *args, **kwargs):
+        patient_pk = kwargs.get("pk")
+        data = super().get(self, request, *args, **kwargs).data
+        data['consultations'] = Patient.objects.get(id=patient_pk).get_consultaions(medecin=Medecin.objects.get(id=getToken(request).user.id))
+        return Response( data, status=status.HTTP_200_OK )
 
     def delete(self, request, *args, **kwargs):
         patient_pk = kwargs.get("pk")
@@ -195,9 +203,6 @@ class StructureSanitaireList(generics.ListCreateAPIView):
     serializer_class = StructureSanitaireSerializer
 
     def get_queryset(self):
-        # print(self.request.path)
-        # if self.request.path == "/structureSanitaires/":
-        #     return StructureSanitaire.objects.all()
 
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
@@ -220,7 +225,7 @@ class StructureSanitaireList(generics.ListCreateAPIView):
                     queryset = StructureSanitaire.objects.filter( Q(is_deleted=False) & (Q(owner__isnull=True) | Q(owner__id=medecin.id)) )
                 
                 queryset = list(filter(lambda ss: not ss.is_deleted, queryset))
-                print(queryset)
+                # print(queryset)
             else:
                 queryset = []
         
@@ -243,7 +248,7 @@ class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
             if medecin:
                 queryset = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
                 queryset = list(filter(lambda ss: not ss.is_deleted, queryset))
-                print(queryset)
+                # print(queryset)
             else:
                 queryset = []
         
@@ -297,7 +302,7 @@ class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
                 hospital = None
             
             if hospital:
-                print("deleted")
+                # print("deleted")
                 hospital.is_deleted = True
                 hospital.save()
 
@@ -362,14 +367,14 @@ class LoginView(APIView):
                 medecin = Medecin.objects.get(id=token.user.id)
                 data = MedecinSerializer(medecin).data
 
-                print("@@@@@@@@@@@@@@@@@")
-                print(medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True))
+                # print("@@@@@@@@@@@@@@@@@")
+                # print(medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True))
                 ss = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
                 
                 ss = filter(lambda s: not s.is_deleted, ss)
                 ss = map(lambda i: i.id, ss)
                 data["structure_sanitaires"] = ss
-                print(data["structure_sanitaires"])
+                # print(data["structure_sanitaires"])
                 return Response({'user': data})
         
         username = request.data.get("username")
@@ -420,11 +425,11 @@ class ScheduleView(APIView):
 
                 return Response({'consultations': consultations, 'demande_consultations': demande_consultations, 'structure_sanitaires': structure_sanitaires}, status=status.HTTP_200_OK)
 
-def getDoctorHospitals(doctor):
-    hospitals = list(map(lambda x: x.centre_medical, doctor.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=doctor.id, status_demande=True)))
-    hospitals = list(filter(lambda ss: not ss.is_deleted, hospitals))
-    data = StructureSanitaireSerializer(hospitals, many=True).data
-    return data
+# def getDoctorHospitals(doctor):
+#     hospitals = list(map(lambda x: x.centre_medical, doctor.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=doctor.id, status_demande=True)))
+#     hospitals = list(filter(lambda ss: not ss.is_deleted, hospitals))
+#     data = StructureSanitaireSerializer(hospitals, many=True).data
+#     return data
 
 def getDemandeConsultationWithName():
         demandes = []

@@ -20,7 +20,7 @@ class Consultation(models.Model):
 
 
 class DemandeConsultation(models.Model):
-    medecin_centre_medical = models.ForeignKey('MedecinStructureSanitaire', models.DO_NOTHING)
+    medecin_centre_medical = models.ForeignKey('MedecinStructureSanitaire', models.CASCADE)
     date_consultation = models.DateTimeField()
     status = models.IntegerField()
     patient = models.ForeignKey('Patient', models.DO_NOTHING)
@@ -31,7 +31,7 @@ class DemandeConsultation(models.Model):
 
 
 class EmploiDuTemp(models.Model):
-    medecin_structure_sanitaire = models.ForeignKey('MedecinStructureSanitaire', models.DO_NOTHING)
+    medecin_structure_sanitaire = models.ForeignKey('MedecinStructureSanitaire', models.CASCADE)
     horaire_start = models.TimeField()
     horaire_end = models.TimeField()
     jour = models.DateField()
@@ -73,8 +73,6 @@ class MedecinStructureSanitaire(models.Model):
     class Meta:
         managed = True
         db_table = 'medecin_structure_sanitaire'
-    
-
 
 
 class Notification(models.Model):
@@ -119,6 +117,41 @@ class Patient(Personne):
         managed = True
         db_table = 'patient'
 
+    def get_consultaions(self, medecin=None):
+
+        if medecin == None:
+            consultations = Consultation.objects.filter(demande_consultation__patient=self)
+            demande_consultations = DemandeConsultation.objects.filter(patient=self)
+
+        else:
+            consultations = Consultation.objects.filter(
+                demande_consultation__medecin_centre_medical__medecin=medecin,
+                demande_consultation__patient=self
+            )
+            demande_consultations = DemandeConsultation.objects.filter(
+                medecin_centre_medical__medecin=medecin,
+                patient=self
+            )
+
+        consultations = ConsultationSerializer(consultations, many=True).data
+        demande_consultations = DemandeConsultationSerializer(demande_consultations, many=True).data
+        structure_sanitaires = getDoctorHospitals(medecin)
+        
+        for consultation in consultations:
+            demande_consultation = DemandeConsultation.objects.get(id=consultation['demande_consultation'])
+            hopital = MedecinStructureSanitaire.objects.get(id=demande_consultation.medecin_centre_medical.id).centre_medical
+            
+            demande_consultation = DemandeConsultationSerializer(demande_consultation).data
+            hopital = StructureSanitaireSerializer(hopital).data
+            patient = PatientSerializer(self).data
+
+            demande_consultation['hopital'] = hopital
+            demande_consultation['patient'] = patient
+            consultation['demande_consultation'] = demande_consultation
+
+
+        return consultations
+
 
 class Specialite(models.Model):
     libelle = models.CharField(max_length=150, null=False)
@@ -154,3 +187,7 @@ class Constantes(models.Model):
     class Meta:
         managed = True
         db_table = 'constantes'
+
+
+from .serializers import ConsultationSerializer, DemandeConsultationSerializer, StructureSanitaireSerializer, PatientSerializer
+from .utils import getDoctorHospitals
