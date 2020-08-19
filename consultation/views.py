@@ -13,7 +13,7 @@ from rest_framework import mixins
 from rest_framework.decorators import api_view
 import json
 
-from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
+from .models import Consultation, Constantes, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
 from .serializers import *
 from .utils import getDoctorHospitals, getToken
 
@@ -26,9 +26,20 @@ class ConsultationList(generics.ListCreateAPIView):
     serializer_class = ConsultationSerializer
 
     def create(self, request, *args, **kwargs):
-        medecin_pk = request.data.get("medecin_pk")
-        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
-        # print(medecin_pk + "----"+ structure_sanitaire_pk)
+        constantes_data = request.data.get('constantes')
+        if constantes_data :
+            constante = Constantes(
+                temperature = constantes_data.get('temperature'),
+                poids = constantes_data.get('poids'),
+                taille = constantes_data.get('taille'),
+                systolique = constantes_data.get('systolique'),
+                diastolique = constantes_data.get('diastolique'),
+                glycemie = constantes_data.get('glycemie'),
+                cholesterol = constantes_data.get('cholesterol'),
+                pouls = constantes_data.get('pouls'),
+            )
+            constante.save()
+
 
         medecin_pk = request.data.get("medecin_pk")
         structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
@@ -36,12 +47,33 @@ class ConsultationList(generics.ListCreateAPIView):
         if structure_sanitaire_pk and medecin_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
             patient = Patient.objects.get(pk = request.data.get("patient"))
-            dc = DemandeConsultation.objects.create( medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
-            Consultation.objects.create(demande_consultation=dc, motif=request.data.get("motif"),resume=request.data.get("resume"), interrogatoire= request.data.get("interrogatoire"),hypothese_diagnostique=request.data.get("hypothese_diagnostique"))
-
+            
+            dc = DemandeConsultation.objects.create(
+                medecin_centre_medical= mss,
+                patient= patient,
+                status= request.data.get("status"),
+                date_consultation= datetime.now()
+            )
+            
+            Consultation.objects.create(
+                constantes=constante, 
+                demande_consultation=dc, 
+                motif=request.data.get("motif"),
+                resume=request.data.get("resume"), 
+                interrogatoire= request.data.get("interrogatoire"),
+                hypothese_diagnostique=request.data.get("hypothese_diagnostique")
+            )
             return Response(status=status.HTTP_200_OK)
+
         dc = DemandeConsultation.objects.get(pk=request.data.get("demande_consultation"))
-        Consultation.objects.create(demande_consultation=dc, motif=request.data.get("motif"),resume=request.data.get("resume"), interrogatoire= request.data.get("interrogatoire"),hypothese_diagnostique=request.data.get("hypothese_diagnostique"))
+        Consultation.objects.create(
+            constantes=constante, 
+            demande_consultation=dc, 
+            motif=request.data.get("motif"),
+            resume=request.data.get("resume"), 
+            interrogatoire= request.data.get("interrogatoire"),
+            hypothese_diagnostique=request.data.get("hypothese_diagnostique")
+        )
         return Response(status=status.HTTP_201_CREATED)
 
 class ConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
@@ -55,6 +87,8 @@ class DemandeConsultationList(generics.ListCreateAPIView):
     def create(self, request, *args, **kwargs):
         medecin_pk = request.data.get("medecin")
         structure_sanitaire_pk = request.data.get('medecin_centre_medical')
+
+        print(medecin_pk, structure_sanitaire_pk)
         
         if structure_sanitaire_pk and medecin_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
@@ -123,8 +157,11 @@ class PatientDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get(self, request, *args, **kwargs):
         patient_pk = kwargs.get("pk")
+        patient = Patient.objects.get(id=patient_pk)
         data = super().get(self, request, *args, **kwargs).data
-        data['consultations'] = Patient.objects.get(id=patient_pk).get_consultaions(medecin=Medecin.objects.get(id=getToken(request).user.id))
+        
+        data['consultations'] = patient.get_consultaions(medecin=Medecin.objects.get(id=getToken(request).user.id))
+        
         return Response( data, status=status.HTTP_200_OK )
 
     def delete(self, request, *args, **kwargs):
@@ -424,12 +461,6 @@ class ScheduleView(APIView):
                     demande_consultation['patient'] = patient
 
                 return Response({'consultations': consultations, 'demande_consultations': demande_consultations, 'structure_sanitaires': structure_sanitaires}, status=status.HTTP_200_OK)
-
-# def getDoctorHospitals(doctor):
-#     hospitals = list(map(lambda x: x.centre_medical, doctor.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=doctor.id, status_demande=True)))
-#     hospitals = list(filter(lambda ss: not ss.is_deleted, hospitals))
-#     data = StructureSanitaireSerializer(hospitals, many=True).data
-#     return data
 
 def getDemandeConsultationWithName():
         demandes = []

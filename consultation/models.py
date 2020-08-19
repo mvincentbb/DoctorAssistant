@@ -9,6 +9,7 @@ GENDER_CHOICES = [
 
 class Consultation(models.Model):
     demande_consultation = models.ForeignKey('DemandeConsultation', models.DO_NOTHING)
+    constantes = models.ForeignKey('Constantes', models.DO_NOTHING, null=False)
     motif = models.TextField()
     interrogatoire = models.TextField()
     resume = models.TextField()
@@ -17,6 +18,7 @@ class Consultation(models.Model):
     class Meta:
         managed = True
         db_table = 'consultation'
+        ordering = ['-id']
 
 
 class DemandeConsultation(models.Model):
@@ -140,17 +142,30 @@ class Patient(Personne):
         for consultation in consultations:
             demande_consultation = DemandeConsultation.objects.get(id=consultation['demande_consultation'])
             hopital = MedecinStructureSanitaire.objects.get(id=demande_consultation.medecin_centre_medical.id).centre_medical
+            constantes = Constantes.objects.get(id=consultation['constantes'])
             
             demande_consultation = DemandeConsultationSerializer(demande_consultation).data
             hopital = StructureSanitaireSerializer(hopital).data
+            constantes = ConstantesSerializer(constantes).data
             patient = PatientSerializer(self).data
 
             demande_consultation['hopital'] = hopital
             demande_consultation['patient'] = patient
+            consultation['constantes'] = constantes
             consultation['demande_consultation'] = demande_consultation
 
 
         return consultations
+
+    def get_last_constantes(self, medecin=None):
+        if medecin == None:
+            consultations = Consultation.objects.filter(demande_consultation__patient=self, constantes__isnull=False)
+
+        else:
+            consultations = Consultation.objects.filter(
+                demande_consultation__medecin_centre_medical__medecin=medecin,
+                demande_consultation__patient=self, constantes__isnull=False
+            )
 
 
 class Specialite(models.Model):
@@ -179,8 +194,12 @@ class StructureSanitaire(User):
         ordering = ['denomination']
 
 class Constantes(models.Model):
-    temprature = models.DecimalField(max_digits=4, decimal_places=2)
-    pression_arterielle = models.DecimalField(max_digits=5, decimal_places=2)
+    temperature = models.DecimalField(max_digits=4, decimal_places=2)
+    systolique = models.IntegerField(null=True)
+    diastolique = models.IntegerField(null=True)
+    glycemie = models.IntegerField(null=True)
+    cholesterol = models.IntegerField(null=True)
+    pouls = models.IntegerField(null=True)
     poids = models.DecimalField(max_digits=5, decimal_places=2)
     taille = models.DecimalField(max_digits=4, decimal_places=1)
 
@@ -189,5 +208,5 @@ class Constantes(models.Model):
         db_table = 'constantes'
 
 
-from .serializers import ConsultationSerializer, DemandeConsultationSerializer, StructureSanitaireSerializer, PatientSerializer
+from .serializers import ConsultationSerializer, ConstantesSerializer, DemandeConsultationSerializer, StructureSanitaireSerializer, PatientSerializer
 from .utils import getDoctorHospitals
