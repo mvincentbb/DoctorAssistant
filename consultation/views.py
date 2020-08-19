@@ -108,8 +108,10 @@ class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
         if structure_sanitaire_pk and medecin_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
             patient = Patient.objects.get(pk = request.data.get("patient"))
-            dc = DemandeConsultation.objects.update( medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
-            return Response(data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc)).data,status=status.HTTP_200_OK)
+            dc = DemandeConsultation(id=kwargs['pk'] ,medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
+            dc.save()
+            data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.id)).data
+            return Response(data = data , status=status.HTTP_200_OK)
         
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
@@ -479,6 +481,7 @@ def allDemandeConsultation(request):
 
 @api_view(['POST'])
 def countPatients(request, *args, **kwargs):
+    print(request.data)
     if request.method == 'POST':
-        patientsNumber = Patient.objects.filter(doctor=request.data.get("doctorpatients"), is_deleted=False).count()
-        return Response(data = patientsNumber)
+        patientsNumber = Patient.objects.filter(doctor=request.data.get("doctorpatients"), is_deleted=False)
+        return Response(data = patientsNumber.count())
