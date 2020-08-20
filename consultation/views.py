@@ -26,12 +26,32 @@ class ConsultationList(generics.ListCreateAPIView):
     serializer_class = ConsultationSerializer
 
     def create(self, request, *args, **kwargs):
+        medecin_pk = request.data.get("medecin_pk")
+        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
         constantes_data = request.data.get('constantes')
+        patient_pk = request.data.get('patient')
+
         constantes_serializer = ConstantesSerializer(data=constantes_data)
         if constantes_serializer.is_valid():
             constantes = constantes_serializer.save()
 
             data = request.data.copy()
+            if structure_sanitaire_pk and medecin_pk:
+                mss = MedecinStructureSanitaire.objects.get(
+                    medecin__id=medecin_pk, 
+                    centre_medical__id=structure_sanitaire_pk
+                )
+                patient = Patient.objects.get(pk = patient_pk)
+
+                demande_consultation_data = request.data.copy()
+                demande_consultation_data.update({ 'medecin_centre_medical': mss.id, 'date_consultation': datetime.now() })
+                demande_consultation_serializer = DemandeConsultationSerializer(data=demande_consultation_data)
+                if demande_consultation_serializer.is_valid():
+                    demande_consultation = demande_consultation_serializer.save()
+                    data.update({ 'demande_consultation': demande_consultation.id })
+                else:
+                    return Response(demande_consultation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
             data.update({ 'constantes': constantes.id })
             consultation_serializer = ConsultationSerializer(data=data)
             if consultation_serializer.is_valid():
