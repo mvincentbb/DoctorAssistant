@@ -27,62 +27,85 @@ class ConsultationList(generics.ListCreateAPIView):
 
     def create(self, request, *args, **kwargs):
         constantes_data = request.data.get('constantes')
-        if constantes_data :
-            constante = Constantes(
-                temperature = constantes_data.get('temperature'),
-                poids = constantes_data.get('poids'),
-                taille = constantes_data.get('taille'),
-                systolique = constantes_data.get('systolique'),
-                diastolique = constantes_data.get('diastolique'),
-                glycemie = constantes_data.get('glycemie'),
-                cholesterol = constantes_data.get('cholesterol'),
-                pouls = constantes_data.get('pouls'),
-            )
-            constante.save()
+        constantes_serializer = ConstantesSerializer(data=constantes_data)
+        if constantes_serializer.is_valid():
+            constantes = constantes_serializer.save()
 
-
-        medecin_pk = request.data.get("medecin_pk")
-        structure_sanitaire_pk = request.data.get('structure_sanitaire_pk')
-        
-        if structure_sanitaire_pk and medecin_pk:
-            mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
-            patient = Patient.objects.get(pk = request.data.get("patient"))
-            
-            dc = DemandeConsultation.objects.create(
-                medecin_centre_medical= mss,
-                patient= patient,
-                status= request.data.get("status"),
-                date_consultation= datetime.now()
-            )
-            
-            Consultation.objects.create(
-                constantes=constante, 
-                demande_consultation=dc, 
-                motif=request.data.get("motif"),
-                resume=request.data.get("resume"), 
-                interrogatoire= request.data.get("interrogatoire"),
-                hypothese_diagnostique=request.data.get("hypothese_diagnostique")
-            )
-            return Response(status=status.HTTP_200_OK)
-
-        dc = DemandeConsultation.objects.get(pk=request.data.get("demande_consultation"))
-        Consultation.objects.create(
-            constantes=constante, 
-            demande_consultation=dc, 
-            motif=request.data.get("motif"),
-            resume=request.data.get("resume"), 
-            interrogatoire= request.data.get("interrogatoire"),
-            hypothese_diagnostique=request.data.get("hypothese_diagnostique")
-        )
-        return Response(status=status.HTTP_201_CREATED)
+            data = request.data.copy()
+            data.update({ 'constantes': constantes.id })
+            consultation_serializer = ConsultationSerializer(data=data)
+            if consultation_serializer.is_valid():
+                consultation_serializer.save()
+                return Response(status=status.HTTP_201_CREATED)
+            else:
+                return Response(consultation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(constantes_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Consultation.objects.all()
     serializer_class = ConsultationSerializer
+
+    def get_queryset(self):
+        AUTHORIZATION = self.request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            if self.request.user.is_authenticated and self.request.user.is_staff:
+                queryset = Consultation.objects.all()
+            else:
+                queryset = []
+        else:
+            token_key = AUTHORIZATION.split(" ")[1]
+            token = Token.objects.get(key=token_key)
+            if Medecin.objects.get(id=token.user.id):
+                queryset = Consultation.objects.filter(demande_consultation__medecin_centre_medical__medecin=token.user)
+            else:
+                queryset = []
+        
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        consultation_pk = kwargs.get("pk")
+        consultation = Consultation.objects.get(id=consultation_pk)
+        constantes = ConstantesSerializer(consultation.constantes).data
+        
+        data = super().get(self, request, *args, **kwargs).data
+        data['constantes'] = constantes
+        
+        return Response( data, status=status.HTTP_200_OK )
+
+    def update(self, request, *args, **kwargs):
+        response = super().get(self, request, *args, **kwargs)
+        
+        if status.is_success(response.status_code):
+            data = request.data.get('constantes_data')
+            constantes = Constantes.objects.get(id=data.get('id'))
+        
+            serializer = ConstantesSerializer(constantes, data=data)
+            if serializer.is_valid():
+                serializer.save()
+
+            return response
+        return Response( {"error": "Not Found"}, status=status.HTTP_404_NOT_FOUND )
 
 class DemandeConsultationList(generics.ListCreateAPIView):
     serializer_class = DemandeConsultationSerializer
-    queryset = DemandeConsultation.objects.all()
+
+    def get_queryset(self):
+        AUTHORIZATION = self.request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            if self.request.user.is_authenticated and self.request.user.is_staff:
+                queryset = DemandeConsultation.objects.all()
+            else:
+                queryset = []
+        else:
+            token_key = AUTHORIZATION.split(" ")[1]
+            token = Token.objects.get(key=token_key)
+            if Medecin.objects.get(id=token.user.id):
+                queryset = DemandeConsultation.objects.filter(medecin_centre_medical__medecin=token.user)
+            else:
+                queryset = []
+        
+        # print(queryset)
+        return queryset
 
     def create(self, request, *args, **kwargs):
         medecin_pk = request.data.get("medecin")
