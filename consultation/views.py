@@ -239,6 +239,24 @@ class MedecinDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = MedecinSerializer
 
 class MedecinView(APIView):
+    def get(self, request):
+        AUTHORIZATION = request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            token_key = AUTHORIZATION.split(" ")[1]
+            token = Token.objects.get(key=token_key)
+            
+            medecin = Medecin.objects.get(id=token.user.id)
+            if medecin:
+                if request.path == reverse('dash_infos'):
+                    return Response(medecin.get_dashboard_informations(), status=status.HTTP_200_OK)
+                else:
+                    Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+                
+
     def post(self, request):
         AUTHORIZATION = self.request.headers.get("Authorization")
         if not AUTHORIZATION:
@@ -449,21 +467,21 @@ class LoginView(APIView):
                 medecin = Medecin.objects.get(id=token.user.id)
                 data = MedecinSerializer(medecin).data
 
-                # print("@@@@@@@@@@@@@@@@@")
-                # print(medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True))
                 ss = list(map(lambda x: x.centre_medical, medecin.medecin_structure_sanitaires.filter(demandeur="M", medecin__id=medecin.id, status_demande=True)))
                 
                 ss = filter(lambda s: not s.is_deleted, ss)
                 ss = map(lambda i: i.id, ss)
                 data["structure_sanitaires"] = ss
-                # print(data["structure_sanitaires"])
+                # data["dash_info"] = medecin.get_dashboard_informations()
                 return Response({'user': data})
         
         username = request.data.get("username")
         password = request.data.get("password")
         user = authenticate(username=username, password=password)
         if user:
-            data = MedecinSerializer(Medecin.objects.get(id=user.id)).data
+            medecin = Medecin.objects.get(id=user.id)
+            data = MedecinSerializer(medecin).data
+            # data["dash_info"] = medecin.get_dashboard_informations()
             return Response({"token": user.auth_token.key, "user_type": "medecin", 'user': data})
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
