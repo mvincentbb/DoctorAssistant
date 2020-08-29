@@ -140,6 +140,15 @@ class DemandeConsultationList(generics.ListCreateAPIView):
             return Response(data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.pk)).data,status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    # def get(self, request, *args, **kwargs):
+    #     patient_pk = kwargs.get("pk")
+    #     patient = Patient.objects.get(id=patient_pk)
+    #     data = super().get(self, request, *args, **kwargs).data
+        
+    #     data['consultations'] = patient.get_consultaions(medecin=Medecin.objects.get(id=getToken(request).user.id))
+        
+    #     return Response( data, status=status.HTTP_200_OK )
+
 class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DemandeConsultation.objects.all()
     serializer_class = DemandeConsultationSerializer
@@ -508,6 +517,25 @@ class ScheduleView(APIView):
                 demande_consultations = DemandeConsultation.objects.filter(
                     medecin_centre_medical__medecin=medecin
                 )
+
+                month = int(request.query_params.get('month'))
+                year = int(request.query_params.get('year'))
+                if month and year and (month >= 0 and month <= 11):
+
+                    start = date(year, month+1, 1)
+                    end = date(year, month+2, 1)
+                    end = end + timedelta(end.day - 2)
+
+                    consultations = Consultation.objects.filter(
+                        demande_consultation__medecin_centre_medical__medecin=medecin,
+                        demande_consultation__date_consultation__gte=start,
+                        demande_consultation__date_consultation__lte=end,
+                    )
+                    demande_consultations = DemandeConsultation.objects.filter(
+                        medecin_centre_medical__medecin=medecin,
+                        date_consultation__gte=start,
+                        date_consultation__lte=end,
+                    )
 
                 consultations = ConsultationSerializer(consultations, many=True).data
                 demande_consultations = DemandeConsultationSerializer(demande_consultations, many=True).data
