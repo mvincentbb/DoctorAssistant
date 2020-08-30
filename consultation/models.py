@@ -103,7 +103,7 @@ class Medecin(User):
         consultation_nbres.append( 
             consultations.filter(
                 demande_consultation__date_consultation__lte=today, 
-                demande_consultation__date_consultation__gte=( today + timedelta(today.day-1) )
+                demande_consultation__date_consultation__gte=( today - timedelta(today.day-1) )
             ).count()
         )
 
@@ -111,7 +111,7 @@ class Medecin(User):
             len( self.get_distinct_patients(
                 consultations.filter(
                     demande_consultation__date_consultation__lte=today, 
-                    demande_consultation__date_consultation__gte=( today + timedelta(today.day-1) )
+                    demande_consultation__date_consultation__gte=( today - timedelta(today.day-1) )
                 )
             ))
         )
@@ -123,7 +123,7 @@ class Medecin(User):
             consultation_nbres.append( 
                 consultations.filter(
                     demande_consultation__date_consultation__lte=previous, 
-                    demande_consultation__date_consultation__gte=( previous + timedelta(previous.day-1) )
+                    demande_consultation__date_consultation__gte=( previous - timedelta(previous.day-1) )
                 ).count()
             )
 
@@ -131,7 +131,7 @@ class Medecin(User):
                 len( self.get_distinct_patients(
                     consultations.filter(
                         demande_consultation__date_consultation__lte=previous, 
-                        demande_consultation__date_consultation__gte=( previous + timedelta(previous.day-1) )
+                        demande_consultation__date_consultation__gte=( previous - timedelta(previous.day-1) )
                     )
                 ))
             )
@@ -150,7 +150,7 @@ class Medecin(User):
             patients.filter(
                 genre="M",
                 create_date_time__lte=today,
-                create_date_time__gte=( today + timedelta(today.day-1) )
+                create_date_time__gte=( today - timedelta(today.day-1) )
             ).count()
         )
 
@@ -158,7 +158,7 @@ class Medecin(User):
             patients.filter(
                 genre="F",
                 create_date_time__lte=today,
-                create_date_time__gte=( today + timedelta(today.day-1) )
+                create_date_time__gte=( today - timedelta(today.day-1) )
             ).count()
         )
 
@@ -170,7 +170,7 @@ class Medecin(User):
                 patients.filter(
                     genre="M",
                     create_date_time__lte=previous,
-                    create_date_time__gte=( previous + timedelta(previous.day-1) )
+                    create_date_time__gte=( previous - timedelta(previous.day-1) )
                 ).count()
             )
 
@@ -178,7 +178,7 @@ class Medecin(User):
                 patients.filter(
                     genre="F",
                     create_date_time__lte=previous,
-                    create_date_time__gte=( previous + timedelta(previous.day-1) )
+                    create_date_time__gte=( previous - timedelta(previous.day-1) )
                 ).count()
             )
             previous = previous-timedelta(previous.day)

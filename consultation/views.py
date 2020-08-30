@@ -520,11 +520,16 @@ class ScheduleView(APIView):
 
                 month = int(request.query_params.get('month'))
                 year = int(request.query_params.get('year'))
-                if month and year and (month >= 0 and month <= 11):
+                
+                if (month >= 0 and month <= 11):
 
                     start = date(year, month+1, 1)
-                    end = date(year, month+2, 1)
-                    end = end + timedelta(end.day - 2)
+
+                    if month == 11:
+                        end = date(year, month+1, 31)
+                    else:
+                        end = date(year, month+2, 1)
+                        end = end + timedelta(end.day - 2)
 
                     consultations = Consultation.objects.filter(
                         demande_consultation__medecin_centre_medical__medecin=medecin,
