@@ -106,6 +106,7 @@ class ConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
             return response
         return Response( {"error": "Not Found"}, status=status.HTTP_404_NOT_FOUND )
 
+
 class DemandeConsultationList(generics.ListCreateAPIView):
     serializer_class = DemandeConsultationSerializer
 
@@ -124,48 +125,68 @@ class DemandeConsultationList(generics.ListCreateAPIView):
             else:
                 queryset = []
         
-        # print(queryset)
         return queryset
 
     def create(self, request, *args, **kwargs):
         medecin_pk = request.data.get("medecin")
-        structure_sanitaire_pk = request.data.get('medecin_centre_medical')
-
-        print(medecin_pk, structure_sanitaire_pk)
+        structure_sanitaire_pk = request.data.get('centre_medical')
+        patient_pk = request.data.get('patient')
         
-        if structure_sanitaire_pk and medecin_pk:
+        if structure_sanitaire_pk and medecin_pk and patient_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
-            patient = Patient.objects.get(pk = request.data.get("patient"))
-            dc = DemandeConsultation.objects.create( medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
-            return Response(data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.pk)).data,status=status.HTTP_201_CREATED)
+            patient = Patient.objects.get(pk=patient_pk)
+
+            data = request.data
+            data.update({"medecin_centre_medical": mss.id})
+            serializer = DemandeConsultationSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    # def get(self, request, *args, **kwargs):
-    #     patient_pk = kwargs.get("pk")
-    #     patient = Patient.objects.get(id=patient_pk)
-    #     data = super().get(self, request, *args, **kwargs).data
-        
-    #     data['consultations'] = patient.get_consultaions(medecin=Medecin.objects.get(id=getToken(request).user.id))
-        
-    #     return Response( data, status=status.HTTP_200_OK )
 
 class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = DemandeConsultation.objects.all()
     serializer_class = DemandeConsultationSerializer
+    
     def update(self, request, *args, **kwargs):
-        # print("===========")
         medecin_pk = request.data.get("medecin")
         structure_sanitaire_pk = request.data.get('centre_medical')
+        patient_pk = request.data.get('patient')
+        appointment_pk = kwargs['pk']
         
-        if structure_sanitaire_pk and medecin_pk:
+        if structure_sanitaire_pk and medecin_pk and patient_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
-            patient = Patient.objects.get(pk = request.data.get("patient"))
-            dc = DemandeConsultation(id=kwargs['pk'] ,medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
-            dc.save()
-            data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.id)).data
-            return Response(data = data , status=status.HTTP_200_OK)
-        
+            patient = Patient.objects.get(pk=patient_pk)
+            appointment = DemandeConsultation.objects.get(pk=patient_pk)
+
+            data = request.data
+            data.update({"medecin_centre_medical": mss.id})
+            serializer = DemandeConsultationSerializer(appointment, data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+        
+        # if structure_sanitaire_pk and medecin_pk:
+        #     mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
+        #     patient = Patient.objects.get(pk = request.data.get("patient"))
+        #     dc = DemandeConsultation(id=kwargs['pk'] ,medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
+        #     dc.save()
+        #     data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.id)).data
+        #     return Response(data = data , status=status.HTTP_200_OK)
+        
+        # return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class PatientList(generics.ListCreateAPIView):
     serializer_class = PatientSerializer
@@ -481,7 +502,7 @@ class LoginView(APIView):
                 ss = filter(lambda s: not s.is_deleted, ss)
                 ss = map(lambda i: i.id, ss)
                 data["structure_sanitaires"] = ss
-                # data["dash_info"] = medecin.get_dashboard_informations()
+                
                 return Response({'user': data})
         
         username = request.data.get("username")
@@ -490,7 +511,7 @@ class LoginView(APIView):
         if user:
             medecin = Medecin.objects.get(id=user.id)
             data = MedecinSerializer(medecin).data
-            # data["dash_info"] = medecin.get_dashboard_informations()
+            
             return Response({"token": user.auth_token.key, "user_type": "medecin", 'user': data})
         else:
             return Response({"error": "Wrong Credentials"}, status=status.HTTP_400_BAD_REQUEST)
@@ -523,14 +544,15 @@ class ScheduleView(APIView):
                 
                 if (month >= 0 and month <= 11):
 
-                    start = date(year, month+1, 1)
+                    start = datetime(year, month+1, 1, 0, 0, 0, 0)
 
                     if month == 11:
-                        end = date(year, month+1, 31)
+                        end = datetime(year, month+1, 31, 23, 59, 59, 999999)
                     else:
-                        end = date(year, month+2, 1)
+                        end = datetime(year, month+2, 1, 23, 59, 59, 999999)
                         end = end + timedelta(end.day - 2)
 
+                    print(start, end)
                     consultations = Consultation.objects.filter(
                         demande_consultation__medecin_centre_medical__medecin=medecin,
                         demande_consultation__date_consultation__gte=start,
