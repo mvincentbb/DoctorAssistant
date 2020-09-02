@@ -174,20 +174,6 @@ class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
 
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-        
-        # if structure_sanitaire_pk and medecin_pk:
-        #     mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
-        #     patient = Patient.objects.get(pk = request.data.get("patient"))
-        #     dc = DemandeConsultation(id=kwargs['pk'] ,medecin_centre_medical= mss,patient= patient,status= request.data.get("status"),date_consultation= datetime.now())
-        #     dc.save()
-        #     data = DemandeConsultationSerializer(DemandeConsultation.objects.get(id=dc.id)).data
-        #     return Response(data = data , status=status.HTTP_200_OK)
-        
-        # return Response(status=status.HTTP_400_BAD_REQUEST)
-
 class PatientList(generics.ListCreateAPIView):
     serializer_class = PatientSerializer
 
@@ -360,6 +346,22 @@ class StructureSanitaireList(generics.ListCreateAPIView):
                 queryset = []
         
         return queryset
+
+    def get(self, request, *args, **kwargs):
+        data = super().get(self, request, *args, **kwargs).data
+
+        for hospital in data:
+            demande_consultations = DemandeConsultation.objects.filter(
+                medecin_centre_medical__medecin=getToken(request).user,
+                medecin_centre_medical__centre_medical__pk=hospital["id"],
+            )
+            patients = list(map(lambda x: x.patient, demande_consultations))
+            patients_serializer = PatientSerializer(data=patients, many=True)
+            print(patients_serializer.is_valid())
+            # print(patients_serializer.errors)
+            hospital["patients"] = patients_serializer.data
+        
+        return Response( data, status=status.HTTP_200_OK )
 
 class StructureSanitaireDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = StructureSanitaireSerializer
