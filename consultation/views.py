@@ -13,7 +13,7 @@ from rest_framework import mixins
 from rest_framework.decorators import api_view
 import json
 
-from .models import Consultation, Constantes, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification
+from .models import Consultation, Constantes, DemandeConsultation, Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification, Ordonnance, Prescription, Produit
 from .serializers import *
 from .utils import getDoctorHospitals, getToken
 
@@ -161,7 +161,7 @@ class DemandeConsultationDetail(generics.RetrieveUpdateDestroyAPIView):
         if structure_sanitaire_pk and medecin_pk and patient_pk:
             mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
             patient = Patient.objects.get(pk=patient_pk)
-            appointment = DemandeConsultation.objects.get(pk=patient_pk)
+            appointment = DemandeConsultation.objects.get(pk=appointment_pk)
 
             data = request.data
             data.update({"medecin_centre_medical": mss.id})
@@ -483,6 +483,91 @@ class NotificationList(generics.ListCreateAPIView):
 class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Notification.objects.all()
     serializer_class = NotificationSerializer
+
+
+
+class OrdonnanceList(generics.ListCreateAPIView):
+    serializer_class = OrdonnanceSerializer
+
+    def get_queryset(self):
+        AUTHORIZATION = self.request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            if self.request.user.is_authenticated and self.request.user.is_staff:
+                queryset = Ordonnance.objects.all()
+            else:
+                queryset = []
+        else:
+            token = getToken(self.request)
+            if Medecin.objects.get(id=token.user.id):
+                queryset = Ordonnance.objects.filter(consultation__demande_consultation__medecin_centre_medical__medecin=token.user)
+            else:
+                queryset = []
+        
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        data = super().get(self, request, *args, **kwargs).data
+
+        for ordonnance in data:
+            prescriptions = Prescription.objects.filter(ordonnance__pk=ordonnance["id"])
+            prescriptions_serializer = PrescriptionSerializer(data=prescriptions, many=True)
+            print(patients_serializer.is_valid())
+            prescriptions = prescriptions_serializer.data
+
+            for prescription in prescriptions:
+                produit = Produit.objects.get(pk=prescription["produit"])
+                produit_serializer = ProduitSerializer(data=prescriptions)
+                print(produit_serializer.is_valid())
+
+                prescription["produit"] = produit_serializer.data
+
+            ordonnance["prescriptions"] = prescriptions
+
+
+            hospital["patients"] = patients_serializer.data
+        
+        return Response( data, status=status.HTTP_200_OK )
+
+    def create(self, request, *args, **kwargs):
+        medecin_pk = request.data.get("medecin")
+        structure_sanitaire_pk = request.data.get('centre_medical')
+        patient_pk = request.data.get('patient')
+        
+        if structure_sanitaire_pk and medecin_pk and patient_pk:
+            mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
+            patient = Patient.objects.get(pk=patient_pk)
+
+            data = request.data
+            data.update({"medecin_centre_medical": mss.id})
+            serializer = DemandeConsultationSerializer(data=data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+class OrdonnanceDetail(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = OrdonnanceSerializer
+
+    def get_queryset(self):
+        AUTHORIZATION = self.request.headers.get("Authorization")
+        if not AUTHORIZATION:
+            if self.request.user.is_authenticated and self.request.user.is_staff:
+                queryset = Ordonnance.objects.all()
+            else:
+                queryset = []
+        else:
+            token = getToken(self.request)
+            if Medecin.objects.get(id=token.user.id):
+                queryset = Ordonnance.objects.filter(consultation__demande_consultation__medecin_centre_medical__medecin=token.user)
+            else:
+                queryset = []
+        
+        return queryset
+
+
 
 class UserCreate(generics.CreateAPIView):
     authentication_classes = ()

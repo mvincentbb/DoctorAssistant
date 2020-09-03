@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
 from rest_framework.authtoken.models import Token
-from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification, Constantes
+from .models import Consultation, DemandeConsultation , Patient, Personne, Medecin, Specialite, StructureSanitaire, MedecinStructureSanitaire, EmploiDuTemp, Notification, Constantes, Ordonnance, Produit, Prescription
 
 class PersonneSerializer(serializers.ModelSerializer):
     class Meta:
@@ -47,6 +47,22 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = '__all__'
+
+class OrdonnanceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ordonnance, Produit, Prescription
+        fields = '__all__'
+
+class PrescriptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Prescription
+        fields = '__all__'
+
+class ProduitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Produit
+        fields = '__all__'
+
 
 class DemandeConsultationSerializer(serializers.ModelSerializer):
     class Meta:

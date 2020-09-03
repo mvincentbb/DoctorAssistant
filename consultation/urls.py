@@ -41,6 +41,9 @@ urlpatterns = [
     path('medecinStructureSanitaires/<int:pk>/', views.MedecinStructureSanitaireDetail.as_view()),
     path('medecinStructureSanitaires/<int:medecin_pk>/<int:structure_sanitaire_pk>/', views.MedecinStructureSanitaireDetail.as_view()),
 
+    path('ordonnances/', views.OrdonnanceList.as_view()),
+    path('ordonnances/<int:pk>/', views.OrdonnanceDetail.as_view()),
+
     path('emploiDuTemps/', views.EmploiDuTempList.as_view()),
     path('emploiDuTemps/<int:pk>/', views.EmploiDuTempDetail.as_view()),
     path('schedules/', views.ScheduleView.as_view()),
