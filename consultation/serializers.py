@@ -50,7 +50,7 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 class OrdonnanceSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Ordonnance, Produit, Prescription
+        model = Ordonnance
         fields = '__all__'
 
 class PrescriptionSerializer(serializers.ModelSerializer):

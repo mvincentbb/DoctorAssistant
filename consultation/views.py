@@ -56,7 +56,7 @@ class ConsultationList(generics.ListCreateAPIView):
             consultation_serializer = ConsultationSerializer(data=data)
             if consultation_serializer.is_valid():
                 consultation_serializer.save()
-                return Response(status=status.HTTP_201_CREATED)
+                return Response(data=consultation_serializer.data, status=status.HTTP_201_CREATED)
             else:
                 return Response(consultation_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -511,7 +511,7 @@ class OrdonnanceList(generics.ListCreateAPIView):
         for ordonnance in data:
             prescriptions = Prescription.objects.filter(ordonnance__pk=ordonnance["id"])
             prescriptions_serializer = PrescriptionSerializer(data=prescriptions, many=True)
-            print(patients_serializer.is_valid())
+            print(prescriptions_serializer.is_valid())
             prescriptions = prescriptions_serializer.data
 
             for prescription in prescriptions:
@@ -522,30 +522,17 @@ class OrdonnanceList(generics.ListCreateAPIView):
                 prescription["produit"] = produit_serializer.data
 
             ordonnance["prescriptions"] = prescriptions
-
-
-            hospital["patients"] = patients_serializer.data
         
         return Response( data, status=status.HTTP_200_OK )
 
     def create(self, request, *args, **kwargs):
-        medecin_pk = request.data.get("medecin")
-        structure_sanitaire_pk = request.data.get('centre_medical')
-        patient_pk = request.data.get('patient')
-        
-        if structure_sanitaire_pk and medecin_pk and patient_pk:
-            mss = MedecinStructureSanitaire.objects.get(medecin__id=medecin_pk, centre_medical__id=structure_sanitaire_pk)
-            patient = Patient.objects.get(pk=patient_pk)
-
-            data = request.data
-            data.update({"medecin_centre_medical": mss.id})
-            serializer = DemandeConsultationSerializer(data=data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+        data = request.data
+        serializer = OrdonnanceSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
 class OrdonnanceDetail(generics.RetrieveUpdateDestroyAPIView):

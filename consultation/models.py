@@ -55,7 +55,7 @@ class Ordonnance(models.Model):
     class Meta:
         managed = True
         db_table = 'ordonnance'
-        ordering = ['-id']
+        ordering = ['id']
 
 class Prescription(models.Model):
     ordonnance = models.ForeignKey('Ordonnance', models.CASCADE, related_name='prescriptions')
