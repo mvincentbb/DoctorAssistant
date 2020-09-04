@@ -127,6 +127,19 @@ class DemandeConsultationList(generics.ListCreateAPIView):
         
         return queryset
 
+    # def get(self, request, *args, **kwargs):
+    #     data = super().get(self, request, *args, **kwargs).data
+
+    #     if request.path == reverse('new_demandes'):
+    #         ordonnances = Consultation.objects.filter(
+    #             demande_consultation__medecin_centre_medical__medecin=getToken(request).user,
+    #         )
+    #         ordonnances_serializer = OrdonnanceSerializer(data=ordonnances, many=True)
+    #         ordonnances_serializer.is_valid()
+    #         data = ordonnances_serializer.data
+
+    #     return Response( data, status=status.HTTP_200_OK )
+
     def create(self, request, *args, **kwargs):
         medecin_pk = request.data.get("medecin")
         structure_sanitaire_pk = request.data.get('centre_medical')
@@ -355,11 +368,21 @@ class StructureSanitaireList(generics.ListCreateAPIView):
                 medecin_centre_medical__medecin=getToken(request).user,
                 medecin_centre_medical__centre_medical__pk=hospital["id"],
             )
+            consultations = Consultation.objects.filter(
+                demande_consultation__medecin_centre_medical__medecin=getToken(request).user,
+                demande_consultation__medecin_centre_medical__centre_medical__pk=hospital["id"],
+            )
+
             patients = list(map(lambda x: x.patient, demande_consultations))
+            
             patients_serializer = PatientSerializer(data=patients, many=True)
-            print(patients_serializer.is_valid())
-            # print(patients_serializer.errors)
+            consultations_serializer = ConsultationSerializer(data=consultations, many=True)
+
+            patients_serializer.is_valid()
+            consultations_serializer.is_valid()
+
             hospital["patients"] = patients_serializer.data
+            hospital["consultations"] = consultations_serializer.data
         
         return Response( data, status=status.HTTP_200_OK )
 
@@ -524,6 +547,16 @@ class OrdonnanceList(generics.ListCreateAPIView):
 
     def get(self, request, *args, **kwargs):
         data = super().get(self, request, *args, **kwargs).data
+
+        consultation_pk = kwargs.get('pk')
+        if consultation_pk:
+            ordonnances = Ordonnance.objects.filter(
+                consultation__pk=int(consultation_pk),
+                consultation__demande_consultation__medecin_centre_medical__medecin=getToken(request).user,
+            )
+            ordonnances_serializer = OrdonnanceSerializer(data=ordonnances, many=True)
+            ordonnances_serializer.is_valid()
+            data = ordonnances_serializer.data
 
         for ordonnance in data:
             prescriptions = Prescription.objects.filter(ordonnance__pk=ordonnance["id"])

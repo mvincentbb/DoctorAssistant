@@ -12,8 +12,10 @@ urlpatterns = [
 
     path('consultations/', views.ConsultationList.as_view()),
     path('consultations/<int:pk>/', views.ConsultationDetail.as_view()),
+    path('consultations/<int:pk>/ordonnances/', views.OrdonnanceList.as_view()),
 
     path('demandeConsultations/', views.DemandeConsultationList.as_view()),
+    path('demandeConsultations/news/', views.DemandeConsultationList.as_view(), name="new_demandes"),
     path('demandeConsultations/<int:pk>/', views.DemandeConsultationDetail.as_view()),
     path('demandeConsultationsWithNames/', views.allDemandeConsultation),
 
