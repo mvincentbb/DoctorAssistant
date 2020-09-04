@@ -44,6 +44,12 @@ urlpatterns = [
     path('ordonnances/', views.OrdonnanceList.as_view()),
     path('ordonnances/<int:pk>/', views.OrdonnanceDetail.as_view()),
 
+    path('produits/', views.ProduitList.as_view()),
+    path('produits/<int:pk>/', views.ProduitDetail.as_view()),
+    
+    path('prescriptions/', views.PrescriptionList.as_view()),
+    path('prescriptions/<int:pk>/', views.PrescriptionDetail.as_view()),
+
     path('emploiDuTemps/', views.EmploiDuTempList.as_view()),
     path('emploiDuTemps/<int:pk>/', views.EmploiDuTempDetail.as_view()),
     path('schedules/', views.ScheduleView.as_view()),

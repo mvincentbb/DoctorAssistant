@@ -9,29 +9,29 @@ GENDER_CHOICES = [
 ]
 
 FORME_MEDICAMENT_CHOICES = [
-    ('Cp', 'Comprimé'),
-    ('F', 'Suspension Buvable'),
-    ('F', 'Solution Buvable'),
-    ('F', 'Sirop'),
-    ('F', 'Injection'),
-    ('F', 'Inhalation'),
-    ('F', 'Spray'),
-    ('F', 'Sachets'),
-    ('F', 'Pommade'),
-    ('F', 'perlingual'),
-    ('F', 'Gouttes'),
-    ('F', 'Solution injectable et buvable'),
-    ('F', 'Crème'),
-    ('F', 'Perfusion'),
-    ('F', 'Liquide'),
-    ('F', 'Poudre'),
-    ('F', 'Suppositoire'),
-    ('F', 'Pommade ophtalmique'),
-    ('F', 'Collyre'),
-    ('F', 'Capsules'),
-    ('F', 'Soluté perfusable'),
-    ('F', 'Gélule'),
-    ('F', 'Gouttes auriculaires'),
+    ('CP', 'Comprimé'),
+    ('SusB', 'Suspension Buvable'),
+    ('SolB', 'Solution Buvable'),
+    ('Sirop', 'Sirop'),
+    ('Inj', 'Injection'),
+    ('Inh', 'Inhalation'),
+    ('Spray', 'Spray'),
+    ('Sachet', 'Sachet'),
+    ('Pommade', 'Pommade'),
+    ('Perlingual', 'Perlingual'),
+    ('Gouttes', 'Gouttes'),
+    ('SolInjBuv', 'Solution injectable et buvable'),
+    ('Creme', 'Crème'),
+    ('Perfusion', 'Perfusion'),
+    ('Liquide', 'Liquide'),
+    ('Poudre', 'Poudre'),
+    ('Supp', 'Suppositoire'),
+    ('PomOph', 'Pommade ophtalmique'),
+    ('Collyre', 'Collyre'),
+    ('Caps', 'Capsules'),
+    ('SolPerf', 'Soluté perfusable'),
+    ('Gelule', 'Gélule'),
+    ('GouttesAuric', 'Gouttes auriculaires'),
 ]
 
 class Consultation(models.Model):
@@ -60,7 +60,7 @@ class Ordonnance(models.Model):
 class Prescription(models.Model):
     ordonnance = models.ForeignKey('Ordonnance', models.CASCADE, related_name='prescriptions')
     produit = models.ForeignKey('Produit', models.DO_NOTHING, related_name='prescriptions')
-    quantité = models.IntegerField()
+    quantite = models.IntegerField()
     posologie = models.CharField(max_length=500)
     
     class Meta:
@@ -73,7 +73,7 @@ class Produit(models.Model):
     nom_commercial = models.CharField(max_length=300, null=True)
     dosage = models.CharField(max_length=20, null=True)
     forme = models.CharField(
-        max_length=5, 
+        max_length=20, 
         null=True,
         choices=FORME_MEDICAMENT_CHOICES,
         default='Cp',

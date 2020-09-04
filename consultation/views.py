@@ -485,6 +485,23 @@ class NotificationDetail(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = NotificationSerializer
 
 
+class ProduitList(generics.ListCreateAPIView):
+    queryset = Produit.objects.all()
+    serializer_class = ProduitSerializer
+
+class ProduitDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Produit.objects.all()
+    serializer_class = ProduitSerializer
+
+
+class PrescriptionList(generics.ListCreateAPIView):
+    queryset = Prescription.objects.all()
+    serializer_class = PrescriptionSerializer
+
+class PrescriptionDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Prescription.objects.all()
+    serializer_class = ProduitSerializer
+
 
 class OrdonnanceList(generics.ListCreateAPIView):
     serializer_class = OrdonnanceSerializer
@@ -516,8 +533,11 @@ class OrdonnanceList(generics.ListCreateAPIView):
 
             for prescription in prescriptions:
                 produit = Produit.objects.get(pk=prescription["produit"])
-                produit_serializer = ProduitSerializer(data=prescriptions)
-                print(produit_serializer.is_valid())
+                
+                produit_serializer = ProduitSerializer(produit, data={}, partial=True)
+                produit_serializer.is_valid()
+                print(produit_serializer.errors)
+                print(produit_serializer.data)
 
                 prescription["produit"] = produit_serializer.data
 
