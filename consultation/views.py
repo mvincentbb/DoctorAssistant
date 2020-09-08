@@ -271,7 +271,7 @@ class MedecinView(APIView):
     def get(self, request):
         AUTHORIZATION = request.headers.get("Authorization")
         if not AUTHORIZATION:
-            Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             token_key = AUTHORIZATION.split(" ")[1]
             token = Token.objects.get(key=token_key)
@@ -281,9 +281,9 @@ class MedecinView(APIView):
                 if request.path == reverse('dash_infos'):
                     return Response(medecin.get_dashboard_informations(), status=status.HTTP_200_OK)
                 else:
-                    Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
             else:
-                Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "Bad Request"}, status=status.HTTP_400_BAD_REQUEST)
                 
 
     def post(self, request):
