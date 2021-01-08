@@ -1,0 +1,63 @@
+{
+  "name": "doctor-assistance-web-app",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "12.13.1",
+    "npm": "6.12.1"
+  },
+  "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^21.0.0",
+    "@ckeditor/ckeditor5-react": "^2.1.0",
+    "@testing-library/jest-dom": "^4.2.4",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^7.2.1",
+    "@toast-ui/react-calendar": "^1.0.5",
+    "avataaars": "^1.2.1",
+    "axios": "^0.21.1",
+    "bootstrap": "^3.4.1",
+    "draft-js": "^0.11.7",
+    "draft-js-plugins-editor": "^3.0.0",
+    "express": "^4.17.1",
+    "express-favicon": "^2.0.1",
+    "font-awesome": "^4.7.0",
+    "jquery": "^1.12.4",
+    "path": "^0.12.7",
+    "popper.js": "^1.16.1",
+    "qs": "^6.9.4",
+    "react": "^16.13.1",
+    "react-bootstrap": "^0.33.1",
+    "react-cookie": "^4.0.3",
+    "react-dom": "^16.13.1",
+    "react-router-dom": "^5.2.0",
+    "react-script-tag": "^1.1.2",
+    "react-scripts": "^3.4.3",
+    "react-select": "^3.1.0",
+    "tui-calendar": "^1.12.13",
+    "typescript": "^3.9.7",
+    "universal-cookie": "^4.0.3"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {}
+}

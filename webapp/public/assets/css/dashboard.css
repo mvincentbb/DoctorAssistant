@@ -1,0 +1,151 @@
+.col-lg-4 .dashboard-resume-item:nth-child(1) {
+    border-radius: 10px;
+    color: white;
+}
+.dashboard-resume-item .row:first-child {
+    padding: 16px 16px 0 16px;
+}
+.dashboard-resume-footer {
+    padding: 10px;
+}
+.dashboard-resume-footer span, .dashboard-resume-header{
+    font-size: 1rem;
+}
+.dashboard-resume-body {
+    font-weight: 700;
+    margin-top: 3px;
+    margin-bottom: 3px;
+}
+.dashboard-resume-icon-box{
+    border-radius: 10px;
+    border: 2px solid;
+    height: 50px;
+    width: 50px;
+    margin: auto;
+    background: linear-gradient(to right top, #ffffff, #ffffff, #75e1d9, #f7f7f7, #ffffff);
+}
+
+.appointment-day-header {
+    background-color: #f4f4f4;
+    color: #727272;
+    border: 2px solid #e1e1e1;
+    font-weight: 700;
+    padding: 6px 0;
+    margin: 0 !important;
+}
+.appointment-date {
+    display: block;
+    border-radius: 3px;
+    width: 100%;
+    margin: auto;
+    font-weight: 700;
+    padding: 0 ;
+    text-align: center;
+}
+.today-appointment .appointment-date {
+    background-color: #fdb40f;
+    color: whitesmoke;
+    font-size: x-small;
+}
+
+.appointment-day-content {
+    max-height: 400px;
+    overflow-y: scroll;
+}
+.appointment-day-content::-webkit-scrollbar {
+	width: 3px;
+	background-color: #4680ff;
+}
+.appointment-day-content::-webkit-scrollbar-track
+{
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+.appointment-day-content::-webkit-scrollbar-thumb
+{
+	background-color: #4680ff;
+}
+.appointment-day-content .item {
+    font-weight: 700;
+    background-color: white;
+    margin: 0;
+}
+.appointment-day-content .item .row {
+    padding: 0;
+    width: 100%;
+    margin: auto;
+    background: white;
+    border-bottom: 1px solid #6565653b;
+    border-left: 2px solid darkorchid;
+}
+.appointment-day-content .avatar {
+    /* width: 50px; */
+    height: 45px;
+    margin-left: 5px;
+    border-radius: 100%;
+    border: 2px solid #ffe214;
+    box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.1);
+    background-size: cover !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+}
+.appointment-day-content .nom-motif {
+    color: black;
+}
+.appointment-day-content .heure {
+    color: #979797;
+}
+.appointment-action {
+    color: #9932cc94;
+    display: inline-block;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 11px;
+    text-align: center;
+    user-select: none;
+    padding: 0 5px;
+    margin: 0 0 0 0;
+    transition: background .15s cubic-bezier(0.65, -0.14, 0, 1.16);
+    cursor: pointer;
+}
+.appointment-action:hover {
+    background: #dfe5ea7a;
+    color: gray;
+}
+.today-appointment .appointment-action:hover {
+    color: #9932cc94;
+}
+
+.appointment-action:active {
+    background: #a4a7aa7a;
+    color: white !important;
+}
+
+.appointment-action i{
+    margin: 0 0 0 5px;
+}
+
+.doctor-activity, .patient-income, .diseases-report {
+    border-radius: 20px;
+}
+
+#appointments {
+    padding: 0 0;
+    height: 942px;
+    overflow-y: scroll;
+}
+#appointments::-webkit-scrollbar {
+	width: 6px;
+	background-color: bisque;
+}
+#appointments::-webkit-scrollbar-track
+{
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+	background-color: #F5F5F5;
+}
+#appointments::-webkit-scrollbar-thumb
+{
+	background-color: bisque;
+}
